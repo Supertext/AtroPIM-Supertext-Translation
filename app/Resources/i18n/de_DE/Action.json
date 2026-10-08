@@ -1,0 +1,29 @@
+{
+  "fields": {
+    "supertextConnection": "Supertext-Verbindung",
+    "supertextSourceLanguage": "Ausgangssprache",
+    "supertextTargetLanguages": "Zielsprachen",
+    "supertextOverwrite": "Bestehende Übersetzungen überschreiben",
+    "supertextPoliteness": "Anrede"
+  },
+  "options": {
+    "type": {
+      "supertextTranslate": "Mit Supertext übersetzen"
+    },
+    "supertextSourceLanguage": {
+      "": "Hauptsprache"
+    },
+    "supertextPoliteness": {
+      "": "Standard",
+      "more": "Formell (Sie)",
+      "less": "Informell (du)"
+    }
+  },
+  "tooltips": {
+    "supertextConnection": "Die Supertext-Verbindung mit dem API-Schlüssel. Leer: die erste Verbindung vom Typ Supertext oder die Umgebungsvariable SUPERTEXT_API_KEY.",
+    "supertextSourceLanguage": "Die Sprache, aus der übersetzt wird. Leer: die Hauptsprache.",
+    "supertextTargetLanguages": "Die Sprachen, in die übersetzt wird. Leer: alle anderen Sprachen.",
+    "supertextOverwrite": "Aus: Felder, die in einer Zielsprache schon Text haben, bleiben unverändert. Ein: Sie werden durch die neue Übersetzung ersetzt.",
+    "supertextPoliteness": "Formelle oder informelle Anrede, für Sprachen, die beides kennen (z. B. Sie/du)."
+  }
+}

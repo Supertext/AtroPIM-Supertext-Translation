@@ -1,0 +1,126 @@
+{
+  "fields": {
+    "type": {
+      "options": [
+        "__APPEND__",
+        "supertext"
+      ]
+    },
+    "supertextApiKey": {
+      "type": "password",
+      "notStorable": true,
+      "dataField": true,
+      "trim": true,
+      "tooltip": true,
+      "tooltipLink": "https://www.supertext.com/en/integrations/api",
+      "conditionalProperties": {
+        "visible": {
+          "conditionGroup": [
+            {
+              "type": "equals",
+              "attribute": "type",
+              "value": "supertext"
+            }
+          ]
+        }
+      }
+    },
+    "supertextEnvironment": {
+      "type": "enum",
+      "notStorable": true,
+      "dataField": true,
+      "options": [
+        "live",
+        "staging",
+        "testing",
+        "custom"
+      ],
+      "default": "live",
+      "tooltip": true,
+      "conditionalProperties": {
+        "visible": {
+          "conditionGroup": [
+            {
+              "type": "equals",
+              "attribute": "type",
+              "value": "supertext"
+            }
+          ]
+        }
+      }
+    },
+    "supertextApiUrl": {
+      "type": "url",
+      "notStorable": true,
+      "dataField": true,
+      "tooltip": true,
+      "conditionalProperties": {
+        "visible": {
+          "conditionGroup": [
+            {
+              "type": "equals",
+              "attribute": "type",
+              "value": "supertext"
+            },
+            {
+              "type": "equals",
+              "attribute": "supertextEnvironment",
+              "value": "custom"
+            }
+          ]
+        },
+        "required": {
+          "conditionGroup": [
+            {
+              "type": "equals",
+              "attribute": "type",
+              "value": "supertext"
+            },
+            {
+              "type": "equals",
+              "attribute": "supertextEnvironment",
+              "value": "custom"
+            }
+          ]
+        }
+      }
+    },
+    "supertextTimeout": {
+      "type": "int",
+      "notStorable": true,
+      "dataField": true,
+      "default": 180,
+      "min": 30,
+      "max": 1800,
+      "tooltip": true,
+      "conditionalProperties": {
+        "visible": {
+          "conditionGroup": [
+            {
+              "type": "equals",
+              "attribute": "type",
+              "value": "supertext"
+            }
+          ]
+        }
+      }
+    },
+    "supertextLanguageCodes": {
+      "type": "text",
+      "notStorable": true,
+      "dataField": true,
+      "tooltip": true,
+      "conditionalProperties": {
+        "visible": {
+          "conditionGroup": [
+            {
+              "type": "equals",
+              "attribute": "type",
+              "value": "supertext"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "fields": {
+    "supertextConnection": {
+      "type": "link",
+      "entity": "Connection",
+      "tooltip": true,
+      "conditionalProperties": {
+        "visible": {
+          "conditionGroup": [
+            {
+              "type": "equals",
+              "attribute": "type",
+              "value": "supertextTranslate"
+            }
+          ]
+        }
+      },
+      "filterDisabled": true,
+      "massUpdateDisabled": true,
+      "importDisabled": true
+    },
+    "supertextSourceLanguage": {
+      "type": "enum",
+      "options": [
+        ""
+      ],
+      "default": "",
+      "tooltip": true,
+      "conditionalProperties": {
+        "visible": {
+          "conditionGroup": [
+            {
+              "type": "equals",
+              "attribute": "type",
+              "value": "supertextTranslate"
+            }
+          ]
+        }
+      },
+      "filterDisabled": true,
+      "massUpdateDisabled": true,
+      "importDisabled": true
+    },
+    "supertextTargetLanguages": {
+      "type": "multiEnum",
+      "options": [],
+      "tooltip": true,
+      "conditionalProperties": {
+        "visible": {
+          "conditionGroup": [
+            {
+              "type": "equals",
+              "attribute": "type",
+              "value": "supertextTranslate"
+            }
+          ]
+        }
+      },
+      "filterDisabled": true,
+      "massUpdateDisabled": true,
+      "importDisabled": true
+    },
+    "supertextOverwrite": {
+      "type": "bool",
+      "default": false,
+      "tooltip": true,
+      "conditionalProperties": {
+        "visible": {
+          "conditionGroup": [
+            {
+              "type": "equals",
+              "attribute": "type",
+              "value": "supertextTranslate"
+            }
+          ]
+        }
+      },
+      "filterDisabled": true,
+      "massUpdateDisabled": true,
+      "importDisabled": true
+    },
+    "supertextPoliteness": {
+      "type": "enum",
+      "options": [
+        "",
+        "more",
+        "less"
+      ],
+      "default": "",
+      "tooltip": true,
+      "conditionalProperties": {
+        "visible": {
+          "conditionGroup": [
+            {
+              "type": "equals",
+              "attribute": "type",
+              "value": "supertextTranslate"
+            }
+          ]
+        }
+      },
+      "filterDisabled": true,
+      "massUpdateDisabled": true,
+      "importDisabled": true
+    }
+  },
+  "links": {
+    "supertextConnection": {
+      "type": "belongsTo",
+      "entity": "Connection"
+    }
+  }
+}

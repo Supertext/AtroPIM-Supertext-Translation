@@ -1,0 +1,29 @@
+{
+  "fields": {
+    "supertextConnection": "Supertext connection",
+    "supertextSourceLanguage": "Source language",
+    "supertextTargetLanguages": "Target languages",
+    "supertextOverwrite": "Overwrite existing translations",
+    "supertextPoliteness": "Form of address"
+  },
+  "options": {
+    "type": {
+      "supertextTranslate": "Translate with Supertext"
+    },
+    "supertextSourceLanguage": {
+      "": "Main language"
+    },
+    "supertextPoliteness": {
+      "": "Default",
+      "more": "Formal",
+      "less": "Informal"
+    }
+  },
+  "tooltips": {
+    "supertextConnection": "The Supertext connection with the API key. Empty: the first connection of type Supertext, or the SUPERTEXT_API_KEY environment variable.",
+    "supertextSourceLanguage": "The language to translate from. Empty: the main language.",
+    "supertextTargetLanguages": "The languages to translate into. Empty: every other language.",
+    "supertextOverwrite": "Off: fields that already have text in a target language are kept. On: they are replaced by the new translation.",
+    "supertextPoliteness": "Formal or informal form of address, for languages that have both (e.g. Sie/du in German)."
+  }
+}

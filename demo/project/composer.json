@@ -1,0 +1,18 @@
+{
+  "name": "supertext/atropim-demo",
+  "description": "AtroPIM with Supertext Translation: the public demo (see docs/DEVELOPER.md → Demo).",
+  "license": "proprietary",
+  "minimum-stability": "stable",
+  "repositories": [
+    {"type": "composer", "url": "https://packagist.atrocore.com/packages.json?id=supertext-demo"}
+  ],
+  "require": {
+    "atrocore/core": "2.4.7",
+    "atrocore/pim": "1.16.10"
+  },
+  "config": {
+    "allow-plugins": true,
+    "sort-packages": true,
+    "platform": {"php": "8.4.99"}
+  }
+}
