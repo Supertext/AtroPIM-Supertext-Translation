@@ -98,7 +98,7 @@ Everything is created only if missing; existing records and accounts are never c
 
 Passwords must meet AtroCore's rule (at least 8 characters with an upper-case letter, a digit and a special character); otherwise that account is skipped with a warning and the demo still starts. The log names variables, never values. Values live only in Railway's variables; `demo/.env.example` lists them.
 
-Railway: project *supertext-cms-demos-php*, service *AtroPIM* (volume at `/data`), MySQL from the shared *MySQL-8* service, <https://atropim-production.up.railway.app/>. Pushes to `main` deploy.
+Railway: project *supertext-cms-demos-php*, service *AtroPIM* (volume `atropim-data` at `/data`), database `atropim` on the shared *MySQL-8* service, <https://atropim-production.up.railway.app/>. Pushes to `main` deploy. The `DEMO_*` and `SUPERTEXT_API_KEY` variables reference the *Contao* service's; `DEMO_ADMIN_PASSWORD` is `${{Contao.DEMO_ADMIN_PASSWORD}}-A1`, because the shared password doesn't meet AtroCore's password rule. The first start takes about ten minutes (each new language rebuilds AtroCore's schema).
 
 Locally:
 
