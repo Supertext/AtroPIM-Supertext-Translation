@@ -23,6 +23,10 @@ Everywhere an administrator enters or is told about the API key — the settings
 
 Wording: "No Supertext account yet? Create one at supertext.com. Generate your API key at supertext.com → Integrations → API (requires the Admin role)." In the UI, links open in a new tab (`target="_blank" rel="noopener"`); where the CMS shows plain text only, use the bare URLs.
 
+## UI languages (always)
+
+The plugin's own UI (buttons, panels, dialogs, settings, permissions, messages) is available in English, German, French and Italian through the CMS's own translation mechanism, so it follows the user's back-end language. New or changed strings get all four languages in the same commit. Formal address (Sie, vous, Lei), the CMS's own terms in each language, "Supertext", placeholders and URLs never translated.
+
 ## Plugin version on the settings screen (always)
 
 Where the CMS doesn't show the plugin's version itself, the plugin's own settings or status screen does (CLI-only plugins print it in their check command). It is read at runtime from the official version source (see *Releases*), never a second hardcoded copy, and links to the GitHub release when it is an X.Y.Z version.
@@ -151,9 +155,9 @@ Lessons from testing against the live API (October 2026), to apply in every plug
 
 - Before committing: `phpunit` (PHPUnit 11; no AtroCore install needed) and PHP lint (`find app tests demo -name '*.php' -print0 | xargs -0 -n1 php -l`). CI also builds the demo image and runs `tests/demo-check.sh` against MySQL 8.4 and the stand-in.
 - AtroCore loads the module by convention from `composer.json` → `extra.atroId` (`SupertextTranslation`): `app/Module.php`, `app/Listeners/<Target>.php` (the file name is the event target: `Metadata`, `ActionLayout`, `ConnectionLayout`, `ActionService`), `app/Handlers/` (routes from `#[Route]`), `app/Resources/metadata/`, `app/Resources/i18n/`.
-- The UI is AtroCore's own: an action type (`app/ActionTypes/SupertextTranslate.php`) and a connection type (`app/ConnectionType/ConnectionSupertext.php`); there is no custom front end. New options go in `app/Resources/metadata/entityDefs/Action.json` or `Connection.json`, the layout listener, both `i18n` folders (label, tooltip, options) **and** the settings tables in `docs/INSTALLATION.md`.
+- The UI is AtroCore's own: an action type (`app/ActionTypes/SupertextTranslate.php`) and a connection type (`app/ConnectionType/ConnectionSupertext.php`); there is no custom front end. New options go in `app/Resources/metadata/entityDefs/Action.json` or `Connection.json`, the layout listener, all four `i18n` folders (`en_US`, `de_DE`, `fr_FR`, `it_IT`: label, tooltip, options) **and** the settings tables in `docs/INSTALLATION.md`. Messages editors see go through `app/Translation/Messages.php` with their texts in `i18n/*/Action.json` → `messages` (`InterfaceLanguagesTest` checks all four).
 - Field rules live in `app/Translation/Planner.php` and `EntityTranslator.php`; keep "Field rules" in `docs/DEVELOPER.md` and "What is translated" in `docs/USER_GUIDE.md` in sync.
-- Keep `app/Api/`, `Planner`, `TextUnit`, `Settings` and `CommandArguments` free of AtroCore classes (unit tests run without AtroCore).
+- Keep `app/Api/`, `Planner`, `TextUnit`, `Settings`, `Messages` and `CommandArguments` free of AtroCore classes (unit tests run without AtroCore).
 - The module id `SupertextTranslation`, the action type `supertextTranslate`, the connection type `supertext` and the `supertext*` field names are stored in users' databases; renaming them is a breaking change.
 - `demo/` is the Railway demo (`railway.json` → `demo/Dockerfile`, context = repo root; volume at `/data` for AtroCore's `data/` and `upload/`). Demo-only code is `demo/docker/install.php` and `setup.php`; they only create what's missing. Demo secrets live only in Railway variables. `docker exec demo demo-console supertext check` runs console commands as www-data.
 - Test UI changes in the demo and regenerate the screenshots they affect (`tests/docs/screenshots.mjs`, against a fresh demo and `tests/docs/stand-in.mjs`; new demo content needs entries in `tests/docs/samples.json`).

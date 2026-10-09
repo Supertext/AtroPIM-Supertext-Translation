@@ -95,6 +95,10 @@ AtroCore translates between its **languages** (**Administration → Languages**)
 
 Multilingual text fields (*varchar*, *text*, *markdown* and *wysiwyg*) of the record, attribute values included. Rich text keeps its formatting (bold text, links, lists). Everything else (numbers, lists of options, files, relations, …) stays as it is. Fields that are read-only are skipped. The [user guide](USER_GUIDE.md#what-is-translated) has the details.
 
+## Interface languages
+
+The module's labels, tooltips and options (the action type, the action and connection fields) and its messages (action results, errors, *Test connection*) are available in English, German, French and Italian. They follow each user's AtroCore interface language: the language of the *Locale* in the user's profile, or the system's default locale. Other languages show the English texts. The console commands (`supertext check`, `supertext translate`) answer in English; an execution's log keeps the language of the user who ran it.
+
 ## Permissions
 
 | What | Who |

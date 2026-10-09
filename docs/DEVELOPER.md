@@ -19,7 +19,8 @@ AtroCore loads a module through `composer.json` → `extra.atroId`: the class `\
 | Settings | `app/Translation/Settings.php`, `ConnectionResolver.php` | Connection data → API key, base URL, timeout, language codes; `SUPERTEXT_API_KEY` / `SUPERTEXT_API_URL` fallbacks. |
 | Console | `app/Console/Check.php`, `Translate.php`, `app/Translation/CommandArguments.php` | `supertext check`, `supertext translate <args>`. |
 | API client | `app/Api/` | Supertext AI file translation API v1 (no AtroCore classes: unit-tested). Same client as the Akeneo bundle. |
-| Translations | `app/Resources/i18n/{en_US,de_DE}/` | Labels, options and tooltips of the new fields. |
+| Translations | `app/Resources/i18n/{en_US,de_DE,fr_FR,it_IT}/` | Labels, options and tooltips of the new fields (`Action.json`, `Connection.json`) and the messages editors see (`Action.json` → `messages`, keys `supertext…`). |
+| Messages | `app/Translation/Messages.php` | Messages in the user's language through AtroCore's `language` service (`Messages::forUser()`), falling back to the English file; `{name}` placeholders. `SupertextException` carries a key, params and Supertext's untranslated detail; the console uses English (`new Messages()`). No AtroCore classes. |
 
 ### Field rules
 
@@ -69,7 +70,7 @@ phpunit                                                   # PHPUnit 11, no AtroC
 find app tests demo -name '*.php' -print0 | xargs -0 -n1 php -l
 ```
 
-The unit tests cover the API client, the HTML document, chunking, the planner, the settings and the console arguments. `tests/demo-check.sh` is the end-to-end test: it starts the demo image twice against MySQL with the stand-in API (`tests/docs/stand-in.mjs`), checks the demo accounts, translates a product with the console command and the other one with the REST API as the editor, and checks the stored values. CI (`.github/workflows/ci.yml`) runs both.
+The unit tests cover the API client, the HTML document, chunking, the planner, the settings, the console arguments and the interface languages (`InterfaceLanguagesTest`: the same keys, placeholders and links in all four languages, and an English text for every message key the code uses). `tests/demo-check.sh` is the end-to-end test: it starts the demo image twice against MySQL with the stand-in API (`tests/docs/stand-in.mjs`), checks the demo accounts, translates a product with the console command and the other one with the REST API as the editor, and checks the stored values. CI (`.github/workflows/ci.yml`) runs both.
 
 ## Demo (Railway)
 
@@ -132,8 +133,9 @@ Releases are published by `.github/workflows/release.yml` when the version is of
 
 ## Conventions
 
-- PSR-12, PHP 8.4, strict types; keep `app/Api/`, `Planner`, `TextUnit`, `Settings` and `CommandArguments` free of AtroCore classes (the unit tests run without AtroCore).
-- New action or connection options: `entityDefs/Action.json` or `Connection.json`, the layout listener, both `i18n` folders (label, tooltip, options) **and** the settings tables in [INSTALLATION.md](INSTALLATION.md#settings).
+- PSR-12, PHP 8.4, strict types; keep `app/Api/`, `Planner`, `TextUnit`, `Settings`, `Messages` and `CommandArguments` free of AtroCore classes (the unit tests run without AtroCore).
+- Interface languages: every label, tooltip, option and message goes into all four `i18n` folders (`en_US`, `de_DE`, `fr_FR`, `it_IT`) in the same commit. Formal address (Sie, vous, Lei), AtroCore's own terms in each language (e.g. *Verwaltung → Verbindungen*, *Administration → Connexions*, *Amministrazione → Connessioni*, *enregistrement*, *action de masse*), and never translate "Supertext", `{placeholders}` or URLs. New messages: a snake_case key (`$messages->text('no_text')`) whose text is `messages` → `supertextNoText` in `Action.json`.
+- New action or connection options: `entityDefs/Action.json` or `Connection.json`, the layout listener, all four `i18n` folders (label, tooltip, options) **and** the settings tables in [INSTALLATION.md](INSTALLATION.md#settings).
 - The module id `SupertextTranslation`, the action type `supertextTranslate`, the connection type `supertext` and the field names `supertext*` are stored in users' databases; renaming them is a breaking change.
 - Keep the three docs in `docs/` current with every change (see `CLAUDE.md`).
 

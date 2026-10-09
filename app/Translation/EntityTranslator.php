@@ -29,8 +29,12 @@ use SupertextTranslation\Api\SupertextException;
  */
 final class EntityTranslator
 {
-    public function __construct(private readonly Container $container)
+    private readonly Messages $messages;
+
+    /** @param Messages|null $messages null: in the current user's language */
+    public function __construct(private readonly Container $container, ?Messages $messages = null)
     {
+        $this->messages = $messages ?? Messages::forUser($container);
     }
 
     public function mainLanguage(): string
@@ -65,20 +69,20 @@ final class EntityTranslator
         $entity  = $service->getEntity($id);
 
         if (!$entity instanceof Entity) {
-            throw new SupertextException(sprintf('%s %s was not found.', $entityType, $id));
+            throw new SupertextException(sprintf('%s %s was not found.', $entityType, $id), key: 'record_not_found', params: ['entity' => $entityType, 'id' => $id]);
         }
 
         $units  = Planner::units($this->fieldDefs($entity), $this->mainLanguage());
         $source = $source !== '' ? $source : $this->mainLanguage();
 
         if ($units === []) {
-            throw new SupertextException(sprintf('%s has no multilingual text fields. Make the fields multilingual and add languages under Administration → Languages.', $entityType));
+            throw new SupertextException(sprintf('%s has no multilingual text fields. Make the fields multilingual and add languages under Administration → Languages.', $entityType), key: 'no_text_fields', params: ['entity' => $entityType]);
         }
 
         $available = Planner::languages($units);
 
         if (!\in_array($source, $available, true)) {
-            throw new SupertextException(sprintf('"%s" is not one of the languages of this record (%s).', $source, implode(', ', $available)));
+            throw new SupertextException(sprintf('"%s" is not one of the languages of this record (%s).', $source, implode(', ', $available)), key: 'not_a_language', params: ['language' => $source, 'languages' => implode(', ', $available)]);
         }
 
         $targets = $targets === [] ? array_values(array_diff($available, [$source])) : array_values(array_intersect(array_unique($targets), $available));
@@ -88,7 +92,7 @@ final class EntityTranslator
         $client   = $settings->client();
 
         if (!$client->hasApiKey()) {
-            throw new SupertextException('No Supertext API key is configured. Create a connection of type "Supertext" under Administration → Connections. ' . Settings::KEY_HELP);
+            throw new SupertextException('No Supertext API key is configured. Create a connection of type "Supertext" under Administration → Connections. ' . Settings::KEY_HELP, key: 'no_api_key_connection');
         }
 
         $results = [];
@@ -106,7 +110,7 @@ final class EntityTranslator
             try {
                 $translations = $this->translateUnits($client, $settings, $plan['translate'], $values, $source, $target, $politeness);
             } catch (SupertextException $e) {
-                $results[$target] = ['status' => 'error', 'translated' => 0, 'existing' => $plan['existing'], 'message' => Settings::explain($e)];
+                $results[$target] = ['status' => 'error', 'translated' => 0, 'existing' => $plan['existing'], 'message' => $this->messages->exception($e)];
 
                 continue;
             }
@@ -135,7 +139,7 @@ final class EntityTranslator
                     'status'     => 'error',
                     'translated' => 0,
                     'existing'   => $plan['existing'],
-                    'message'    => $tooLong !== [] ? 'The translation is longer than the field allows: ' . implode(', ', $tooLong) . '.' : 'Supertext returned no text.',
+                    'message'    => $tooLong !== [] ? $this->messages->text('too_long', ['fields' => implode(', ', $tooLong)]) : $this->messages->text('no_text'),
                 ];
 
                 continue;
@@ -147,7 +151,7 @@ final class EntityTranslator
                 // The record already holds exactly this translation.
             } catch (\Throwable $e) {
                 $reason = trim($e->getMessage()) !== '' ? $e->getMessage() : (new \ReflectionClass($e))->getShortName();
-                $results[$target] = ['status' => 'error', 'translated' => 0, 'existing' => $plan['existing'], 'message' => 'AtroPIM did not accept the translation: ' . $reason];
+                $results[$target] = ['status' => 'error', 'translated' => 0, 'existing' => $plan['existing'], 'message' => $this->messages->text('rejected', ['reason' => $reason])];
 
                 continue;
             }
@@ -157,7 +161,7 @@ final class EntityTranslator
                 'status'     => 'translated',
                 'translated' => \count((array) $data),
                 'existing'   => $plan['existing'],
-                'message'    => $tooLong !== [] ? 'Not translated because the translation is too long: ' . implode(', ', $tooLong) . '.' : '',
+                'message'    => $tooLong !== [] ? $this->messages->text('partly_too_long', ['fields' => implode(', ', $tooLong)]) : '',
             ];
         }
 
@@ -168,17 +172,20 @@ final class EntityTranslator
      * One line per outcome, e.g. "de_CH, fr_CH: translated (3 fields)".
      *
      * @param array<string, array{status: string, translated: int, existing: int, message: string}> $results
+     * @param Messages|null $messages null: English
      */
-    public static function summary(array $results): string
+    public static function summary(array $results, ?Messages $messages = null): string
     {
+        $messages ??= new Messages();
         // Languages with the same outcome share a line: "de_CH, fr_CH: translated (3 fields)".
         $groups = [];
 
         foreach ($results as $language => $result) {
             $outcome = match ($result['status']) {
-                'translated' => sprintf('translated (%d %s)%s', $result['translated'], $result['translated'] === 1 ? 'field' : 'fields', $result['message'] !== '' ? '. ' . $result['message'] : ''),
-                'nothing'    => $result['existing'] > 0 ? 'kept, already translated' : 'nothing to translate',
-                default      => 'error: ' . $result['message'],
+                'translated' => $messages->text($result['translated'] === 1 ? 'translated_one' : 'translated_many', ['count' => $result['translated']])
+                    . ($result['message'] !== '' ? '. ' . $result['message'] : ''),
+                'nothing'    => $messages->text($result['existing'] > 0 ? 'kept' : 'nothing'),
+                default      => $messages->text('error', ['message' => $result['message']]),
             };
             $groups[$outcome][] = $language;
         }
@@ -189,24 +196,27 @@ final class EntityTranslator
             $lines[] = implode(', ', $languages) . ': ' . $outcome;
         }
 
-        return $lines === [] ? 'No other languages to translate into.' : implode("\n", $lines);
+        return $lines === [] ? $messages->text('no_targets') : implode("\n", $lines);
     }
 
     /**
      * The message shown after the action ran: the summary for one record, counts for several.
      *
      * @param list<array{ok: bool, summary: string}> $runs
+     * @param Messages|null $messages null: English
      */
-    public static function runsMessage(array $runs): string
+    public static function runsMessage(array $runs, ?Messages $messages = null): string
     {
+        $messages ??= new Messages();
+
         if (\count($runs) === 1) {
             return str_replace("\n", '; ', $runs[0]['summary']);
         }
 
         $failed = \count(array_filter($runs, static fn (array $run): bool => !$run['ok']));
 
-        return sprintf('Supertext translated %d of %d records.', \count($runs) - $failed, \count($runs))
-            . ($failed > 0 ? ' The Executions panel of the action shows why.' : '');
+        return $messages->text('records_translated', ['done' => \count($runs) - $failed, 'total' => \count($runs)])
+            . ($failed > 0 ? ' ' . $messages->text('records_failed') : '');
     }
 
     /** @return array<string, array<string, mixed>> */

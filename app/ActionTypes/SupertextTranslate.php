@@ -17,6 +17,7 @@ use Espo\ORM\Entity;
 use SupertextTranslation\Api\SupertextException;
 use SupertextTranslation\Translation\ConnectionResolver;
 use SupertextTranslation\Translation\EntityTranslator;
+use SupertextTranslation\Translation\Messages;
 
 /**
  * Action type "Translate with Supertext". An administrator creates an Action of this type for
@@ -56,10 +57,11 @@ class SupertextTranslate extends AbstractAction
         $record     = $this->getSourceEntity($action, $input);
 
         if ($entityType === '' || !$record instanceof Entity) {
-            throw new BadRequest('Translate with Supertext runs on a record: use it from a record or from the list (mass action).');
+            throw new BadRequest(Messages::forUser($this->container)->text('needs_record'));
         }
 
-        $translator = new EntityTranslator($this->container);
+        $messages   = Messages::forUser($this->container);
+        $translator = new EntityTranslator($this->container, $messages);
 
         try {
             $results = $translator->translate(
@@ -72,13 +74,14 @@ class SupertextTranslate extends AbstractAction
                 (new ConnectionResolver($this->container))->settings($action->get('supertextConnectionId') ?: null),
             );
         } catch (SupertextException $e) {
-            $this->log($execution, $record, 'error', $e->getMessage());
-            $this->remember(false, $e->getMessage());
+            $message = $messages->exception($e);
+            $this->log($execution, $record, 'error', $message);
+            $this->remember(false, $message);
 
-            throw new BadRequest($e->getMessage());
+            throw new BadRequest($message);
         }
 
-        $summary = EntityTranslator::summary($results);
+        $summary = EntityTranslator::summary($results, $messages);
         $errors  = array_filter($results, static fn (array $r): bool => $r['status'] === 'error');
         $done    = array_filter($results, static fn (array $r): bool => $r['status'] === 'translated');
 

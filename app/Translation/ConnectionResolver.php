@@ -43,7 +43,7 @@ final class ConnectionResolver
             $connection = $repository->get($connectionId);
 
             if (!$connection instanceof Entity || $connection->get('type') !== self::TYPE) {
-                throw new SupertextException(sprintf('The Supertext connection %s was not found.', $connectionId));
+                throw new SupertextException(sprintf('The Supertext connection %s was not found.', $connectionId), key: 'connection_not_found', params: ['id' => $connectionId]);
             }
 
             return $connection;

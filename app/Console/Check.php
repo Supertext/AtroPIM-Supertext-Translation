@@ -14,6 +14,7 @@ use Atro\Console\AbstractConsole;
 use SupertextTranslation\Api\SupertextException;
 use SupertextTranslation\Translation\ConnectionResolver;
 use SupertextTranslation\Translation\EntityTranslator;
+use SupertextTranslation\Translation\Messages;
 use SupertextTranslation\Translation\Settings;
 
 /**
@@ -31,7 +32,7 @@ class Check extends AbstractConsole
         $container = $this->getContainer();
         $module    = $container->get('moduleManager')->getModule('SupertextTranslation');
         $version   = $module !== null ? $module->getVersion() : '';
-        $translator = new EntityTranslator($container);
+        $translator = new EntityTranslator($container, new Messages());
 
         self::show('Supertext Translation ' . ($version !== '' ? $version : '(version unknown)'), self::INFO);
 

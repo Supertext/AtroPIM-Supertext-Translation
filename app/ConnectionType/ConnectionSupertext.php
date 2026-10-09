@@ -17,6 +17,7 @@ use Atro\Core\Exceptions\BadRequest;
 use Espo\ORM\Entity;
 use SupertextTranslation\Api\SupertextException;
 use SupertextTranslation\Translation\ConnectionResolver;
+use SupertextTranslation\Translation\Messages;
 use SupertextTranslation\Translation\Settings;
 
 /**
@@ -33,15 +34,16 @@ class ConnectionSupertext extends AbstractConnection implements ConnectionInterf
     public function testConnection(Entity $connectionEntity): bool
     {
         $settings = $this->connect($connectionEntity);
+        $messages = Messages::forUser($this->container);
 
         if ($settings->apiKey() === '') {
-            throw new BadRequest('Enter the Supertext API key. ' . Settings::KEY_HELP);
+            throw new BadRequest($messages->text('enter_api_key') . ' ' . $messages->text('key_help'));
         }
 
         try {
             $settings->client()->validateApiKey();
         } catch (SupertextException $e) {
-            throw new BadRequest(Settings::explain($e));
+            throw new BadRequest($messages->exception($e));
         }
 
         return true;

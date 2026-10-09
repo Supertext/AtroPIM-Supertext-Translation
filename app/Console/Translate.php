@@ -15,6 +15,7 @@ use Atro\Core\UserContext;
 use SupertextTranslation\Api\SupertextException;
 use SupertextTranslation\Translation\CommandArguments;
 use SupertextTranslation\Translation\EntityTranslator;
+use SupertextTranslation\Translation\Messages;
 
 /**
  * php console.php "supertext translate Product <id> [de_CH,fr_CH] [--overwrite] [--source=en_US] [--politeness=more|less]"
@@ -30,7 +31,7 @@ class Translate extends AbstractConsole
     {
         $options    = CommandArguments::parse((string) ($data['args'] ?? ''));
         $container  = $this->getContainer();
-        $translator = new EntityTranslator($container);
+        $translator = new EntityTranslator($container, new Messages());
 
         // The console has no signed-in user: run as AtroCore's system user, like jobs do.
         $entityManager = $container->get('entityManager');

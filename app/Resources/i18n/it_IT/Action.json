@@ -1,0 +1,65 @@
+{
+  "fields": {
+    "supertextConnection": "Connessione Supertext",
+    "supertextSourceLanguage": "Lingua di origine",
+    "supertextTargetLanguages": "Lingue di destinazione",
+    "supertextOverwrite": "Sovrascrivi le traduzioni esistenti",
+    "supertextPoliteness": "Forma di cortesia"
+  },
+  "options": {
+    "type": {
+      "supertextTranslate": "Traduci con Supertext"
+    },
+    "supertextSourceLanguage": {
+      "": "Lingua principale"
+    },
+    "supertextPoliteness": {
+      "": "Predefinita",
+      "more": "Formale (Lei)",
+      "less": "Informale (tu)"
+    }
+  },
+  "tooltips": {
+    "supertextConnection": "La connessione Supertext con la chiave API. Vuoto: la prima connessione di tipo Supertext o la variabile d'ambiente SUPERTEXT_API_KEY.",
+    "supertextSourceLanguage": "La lingua da cui tradurre. Vuoto: la lingua principale.",
+    "supertextTargetLanguages": "Le lingue in cui tradurre. Vuoto: tutte le altre lingue.",
+    "supertextOverwrite": "Disattivato: i campi che hanno già un testo in una lingua di destinazione vengono mantenuti. Attivato: vengono sostituiti dalla nuova traduzione.",
+    "supertextPoliteness": "Forma di cortesia formale o informale, per le lingue che le distinguono (p. es. Lei/tu in italiano)."
+  },
+  "messages": {
+    "supertextKeyHelp": "Non ha ancora un account Supertext? Ne crei uno su https://www.supertext.com/person/en/account/signin. Generi la Sua chiave API su https://www.supertext.com/en/integrations/api (supertext.com → Integrations → API; richiede il ruolo Admin).",
+    "supertextEnterApiKey": "Inserisca la chiave API Supertext.",
+    "supertextNoApiKey": "Non è configurata alcuna chiave API Supertext.",
+    "supertextNoApiKeyConnection": "Non è configurata alcuna chiave API Supertext. Crei una connessione di tipo «Supertext» in Amministrazione → Connessioni.",
+    "supertextConnectionNotFound": "La connessione Supertext {id} non è stata trovata.",
+    "supertextNeedsRecord": "Traduci con Supertext funziona su un record: lo usi da un record o dall'elenco (azione di massa).",
+    "supertextRecordNotFound": "{entity} {id} non è stato trovato.",
+    "supertextNoTextFields": "{entity} non ha campi di testo multilingue. Renda i campi multilingue e aggiunga le lingue in Amministrazione → Lingue.",
+    "supertextNotALanguage": "«{language}» non è una delle lingue di questo record ({languages}).",
+    "supertextUnreachable": "Il servizio Supertext non è raggiungibile.",
+    "supertextAuthFailed": "Autenticazione non riuscita. Verifichi la chiave API Supertext.",
+    "supertextNotFound": "La risorsa Supertext richiesta non è stata trovata.",
+    "supertextTooLarge": "Il contenuto è troppo grande per essere tradotto da Supertext in una sola volta.",
+    "supertextRateLimited": "Troppe richieste a Supertext. Riprovi tra poco.",
+    "supertextUnavailable": "Il servizio Supertext non è al momento disponibile.",
+    "supertextHttpStatus": "Supertext ha risposto con HTTP {status}.",
+    "supertextNoFileId": "Supertext non ha restituito alcun ID file.",
+    "supertextFailed": "Supertext non è riuscito a tradurre il documento.",
+    "supertextLimitExceeded": "Il Suo limite di traduzione Supertext è stato superato. Passi a un abbonamento superiore.",
+    "supertextDeleted": "Il documento è stato eliminato da Supertext prima che potesse essere scaricato.",
+    "supertextTimeout": "Tempo scaduto in attesa della traduzione Supertext.",
+    "supertextEmpty": "Il documento tradotto era vuoto.",
+    "supertextNoText": "Supertext non ha restituito alcun testo.",
+    "supertextTooLong": "La traduzione è più lunga di quanto consentito dal campo: {fields}.",
+    "supertextPartlyTooLong": "Non tradotto perché la traduzione è troppo lunga: {fields}.",
+    "supertextRejected": "AtroPIM non ha accettato la traduzione: {reason}",
+    "supertextTranslatedOne": "tradotto (1 campo)",
+    "supertextTranslatedMany": "tradotto ({count} campi)",
+    "supertextKept": "mantenuto, già tradotto",
+    "supertextNothing": "niente da tradurre",
+    "supertextError": "errore: {message}",
+    "supertextNoTargets": "Nessun'altra lingua in cui tradurre.",
+    "supertextRecordsTranslated": "Supertext ha tradotto {done} record su {total}.",
+    "supertextRecordsFailed": "Il pannello Esecuzioni dell'azione ne mostra il motivo."
+  }
+}

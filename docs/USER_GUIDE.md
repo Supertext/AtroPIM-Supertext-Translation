@@ -2,6 +2,8 @@
 
 For editors. **Translate with Supertext** translates a product's texts (or another record's) from one language into your other languages with Supertext AI, and saves them in the record's language fields. Your administrator decides which languages and records it covers (see the [installation guide](INSTALLATION.md#the-action)).
 
+The Supertext fields and messages follow your AtroCore interface language (English, German, French or Italian, from the locale in your profile). The messages below are the English texts.
+
 ## Translate a product
 
 1. Open the product. The texts in the other languages are still empty (*Null*):

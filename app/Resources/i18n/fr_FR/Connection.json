@@ -1,0 +1,27 @@
+{
+  "fields": {
+    "supertextApiKey": "Clé API",
+    "supertextEnvironment": "Environnement",
+    "supertextApiUrl": "URL de l'API",
+    "supertextTimeout": "Délai d'attente (secondes)",
+    "supertextLanguageCodes": "Codes de langue"
+  },
+  "options": {
+    "type": {
+      "supertext": "Supertext"
+    },
+    "supertextEnvironment": {
+      "live": "Live",
+      "staging": "Staging",
+      "testing": "Testing",
+      "custom": "URL personnalisée"
+    }
+  },
+  "tooltips": {
+    "supertextApiKey": "Votre clé API Supertext AI. Pas encore de compte Supertext ? Créez-en un sur https://www.supertext.com/person/en/account/signin. Générez votre clé API sur https://www.supertext.com/en/integrations/api (supertext.com → Integrations → API ; rôle Admin requis).",
+    "supertextEnvironment": "Live pour l'utilisation normale. Staging et Testing sont les systèmes de test de Supertext.",
+    "supertextApiUrl": "URL de base de l'API Supertext, p. ex. https://api.supertext.com/v1/",
+    "supertextTimeout": "Durée d'attente maximale pour une traduction (30 à 1800 secondes).",
+    "supertextLanguageCodes": "Facultatif : une ligne par langue dont le code Supertext diffère du code AtroPIM, p. ex. « de_DE = de-CH ». Par défaut, de_CH devient de-CH."
+  }
+}
