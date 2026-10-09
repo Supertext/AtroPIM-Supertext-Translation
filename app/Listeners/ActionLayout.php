@@ -35,10 +35,7 @@ class ActionLayout extends AbstractLayoutListener
      * Appends the rows to the first panel unless the layout already has the marker field
      * (an administrator may have placed the fields in a custom layout).
      *
-     * @param array<int, mixed> $layout
-     * @param list<list<array<string, string>|false>> $rows
-     *
-     * @return array<int, mixed>
+     * @param list<list<array<string, string|bool>|false>> $rows
      */
     public static function addRows(mixed $layout, array $rows, string $marker): mixed
     {

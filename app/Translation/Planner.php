@@ -24,7 +24,7 @@ final class Planner
     public const TEXT_TYPES = ['varchar' => false, 'text' => false, 'markdown' => false, 'wysiwyg' => true];
 
     /**
-     * @param array<string, array<string, mixed>> $fieldDefs field name => definition (entityDefs fields, attribute fields included)
+     * @param array<string, mixed> $fieldDefs field name => definition (entityDefs fields, attribute fields included; non-array entries are skipped)
      *
      * @return list<TextUnit>
      */

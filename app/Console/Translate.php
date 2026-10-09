@@ -54,6 +54,8 @@ class Translate extends AbstractConsole
             );
         } catch (SupertextException $e) {
             self::show($e->getMessage(), self::ERROR, true);
+
+            return; // show() with $stop = true exits
         }
 
         $failed = array_filter($results, static fn (array $r): bool => $r['status'] === 'error');

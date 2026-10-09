@@ -225,7 +225,7 @@ final class EntityTranslator
         $defs = $this->container->get('metadata')->get(['entityDefs', $entity->getEntityType(), 'fields'], []);
 
         // Attribute values are only in the loaded entity's own definitions.
-        if (property_exists($entity, 'entityDefs') && \is_array($entity->entityDefs['fields'] ?? null)) {
+        if (\is_array($entity->entityDefs['fields'] ?? null)) {
             $defs = array_merge($defs, $entity->entityDefs['fields']);
         }
 
