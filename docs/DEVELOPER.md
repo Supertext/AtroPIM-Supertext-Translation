@@ -70,7 +70,7 @@ phpunit                                                   # PHPUnit 11, no AtroC
 find app tests demo -name '*.php' -print0 | xargs -0 -n1 php -l
 ```
 
-The unit tests cover the API client, the HTML document, chunking, the planner, the settings, the console arguments and the interface languages (`InterfaceLanguagesTest`: the same keys, placeholders and links in all four languages, and an English text for every message key the code uses). `tests/demo-check.sh` is the end-to-end test: it starts the demo image twice against MySQL with the stand-in API (`tests/docs/stand-in.mjs`), checks the demo accounts, translates a product with the console command and the other one with the REST API as the editor, and checks the stored values. CI (`.github/workflows/ci.yml`) runs both.
+The unit tests cover the API client, the HTML document, chunking, the planner, the settings, the console arguments and the interface languages (`InterfaceLanguagesTest`: the same keys, placeholders and links in all four languages, and an English text for every message key the code uses). `tests/demo-check.sh` is the end-to-end test: it starts the demo image twice against MySQL with the stand-in API (`tests/docs/stand-in.mjs`), checks the demo accounts, translates a product with the console command and the other one with the REST API as the editor, and checks the stored values. CI (`.github/workflows/ci.yml`) runs both, plus PHPStan (see *Code quality and security checks*).
 
 ## Demo (Railway)
 
@@ -122,6 +122,15 @@ BASE_URL=http://127.0.0.1:8095 DEMO_ADMIN_EMAIL=… DEMO_ADMIN_PASSWORD=… DEMO
 ```
 
 The images are 1× and cropped to the relevant part. The connection's API URL isn't shown (the demo's connection is set to *Live*; the stand-in comes from the environment variable).
+
+## Code quality and security checks
+
+- **Checks** (`.github/workflows/checks.yml`): actionlint and zizmor lint the workflows on every push and pull request; dependency review fails a pull request that adds a package with a known vulnerability (moderate or worse). Third-party actions are pinned to commit SHAs (Dependabot keeps them current). Run the linters locally with `pip install actionlint-py zizmor`, then `actionlint` and `zizmor .github/workflows`.
+- **Links** (`.github/workflows/links.yml`): lychee checks the links in all Markdown files weekly and whenever docs change on `main`. Broken links open (or update) the issue "Broken links in the docs". Links that can't work from CI (local addresses, pages behind a login, placeholders) are excluded in `.lycheeignore`.
+- **PHPStan** (job `phpstan` in `ci.yml`, configuration in `phpstan.neon`): level 5 on `app/`. PHPStan needs AtroCore's classes, so the job installs AtroPIM from `demo/project/composer.json` (without scripts) and loads its autoloader through `tests/phpstan-bootstrap.php`. Locally, point `ATRO_VENDOR` at the `vendor/` folder of an AtroCore 2.4 / AtroPIM 1.16 installation: `ATRO_VENDOR=/path/to/atro/vendor phpstan analyse` (PHPStan 2.x, e.g. the `phpstan.phar` from its GitHub releases). Existing findings that aren't fixed yet are listed in `phpstan-baseline.neon` (regenerate with `phpstan analyse --generate-baseline` after fixing some); new code must not add any.
+- **GitHub settings** (set by Remy's setup script, not in the repo): secret scanning with push protection (a push containing a known token format is rejected; findings under *Security → Secret scanning*) and CodeQL default setup (findings under *Security → Code scanning* and as pull request comments). CodeQL doesn't cover PHP, which is why this repo runs PHPStan.
+
+Before starting work in this repo, look at its open findings: code scanning alerts, secret scanning alerts, Dependabot pull requests and the issue "Broken links in the docs".
 
 ## Releasing
 

@@ -102,10 +102,16 @@ Every Supertext plugin repo has, and a new one gets from the start:
 - `LICENSE` matching the license its manifest declares (`composer.json`, `package.json`, `pyproject.toml`, `.csproj`, plugin header).
 - `SECURITY.md`: report vulnerabilities privately through GitHub's private vulnerability reporting or support@supertext.com, never in public issues.
 - `.github/dependabot.yml`: weekly updates for its package ecosystem and GitHub Actions, minor and patch updates grouped into one pull request.
-- On GitHub: the About box filled in (one-sentence description, website https://www.supertext.com, topics), `main` protected against force-pushes and deletion, Wiki and Projects off, Dependabot alerts and private vulnerability reporting on, and the Supertext social preview image.
+- `.github/workflows/checks.yml` (actionlint + zizmor on every push and PR, dependency review on PRs) and `.github/workflows/links.yml` (lychee weekly and on docs changes; broken links open the issue "Broken links in the docs"). Third-party actions are pinned to commit SHAs.
+- PHP repos: PHPStan in CI (`phpstan.neon`, baseline in `phpstan-baseline.neon`).
+- On GitHub: the About box filled in (one-sentence description, website https://www.supertext.com, topics), `main` protected against force-pushes and deletion, Wiki and Projects off, Dependabot alerts and private vulnerability reporting on, secret scanning with push protection and CodeQL default setup on, and the Supertext social preview image.
 - A row in the plugin list (see *Plugin list*) and in the org profile (`Supertext/.github` → `profile/README.md`).
 
 Claude sessions can't change GitHub repo settings (HTTP 403): add a new repo to Remy's setup script (`set-github-about`) instead of trying.
+
+## Checks and alerts (always)
+
+Before starting work in a repo, look at its open findings and fix what the task touches or what is quick: code scanning alerts (`gh api 'repos/Supertext/<Repo>/code-scanning/alerts?state=open'`), secret scanning alerts (`…/secret-scanning/alerts?state=open`), open Dependabot PRs and the issue "Broken links in the docs". New workflows and workflow changes must pass actionlint and zizmor; PHP code must pass PHPStan at the repo's level. See `docs/DEVELOPER.md` → *Code quality and security checks*.
 
 ## Demo accounts rule (always)
 
@@ -153,7 +159,7 @@ Lessons from testing against the live API (October 2026), to apply in every plug
 
 ## This repo
 
-- Before committing: `phpunit` (PHPUnit 11; no AtroCore install needed) and PHP lint (`find app tests demo -name '*.php' -print0 | xargs -0 -n1 php -l`). CI also builds the demo image and runs `tests/demo-check.sh` against MySQL 8.4 and the stand-in.
+- Before committing: `phpunit` (PHPUnit 11; no AtroCore install needed) and PHP lint (`find app tests demo -name '*.php' -print0 | xargs -0 -n1 php -l`). CI also runs PHPStan (level 5, needs AtroCore's classes: see `docs/DEVELOPER.md` → *Code quality and security checks*), builds the demo image and runs `tests/demo-check.sh` against MySQL 8.4 and the stand-in.
 - AtroCore loads the module by convention from `composer.json` → `extra.atroId` (`SupertextTranslation`): `app/Module.php`, `app/Listeners/<Target>.php` (the file name is the event target: `Metadata`, `ActionLayout`, `ConnectionLayout`, `ActionService`), `app/Handlers/` (routes from `#[Route]`), `app/Resources/metadata/`, `app/Resources/i18n/`.
 - The UI is AtroCore's own: an action type (`app/ActionTypes/SupertextTranslate.php`) and a connection type (`app/ConnectionType/ConnectionSupertext.php`); there is no custom front end. New options go in `app/Resources/metadata/entityDefs/Action.json` or `Connection.json`, the layout listener, all four `i18n` folders (`en_US`, `de_DE`, `fr_FR`, `it_IT`: label, tooltip, options) **and** the settings tables in `docs/INSTALLATION.md`. Messages editors see go through `app/Translation/Messages.php` with their texts in `i18n/*/Action.json` → `messages` (`InterfaceLanguagesTest` checks all four).
 - Field rules live in `app/Translation/Planner.php` and `EntityTranslator.php`; keep "Field rules" in `docs/DEVELOPER.md` and "What is translated" in `docs/USER_GUIDE.md` in sync.

@@ -4,12 +4,17 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: "8.4"
           tools: phpunit:11
@@ -17,6 +22,26 @@ jobs:
         run: find app tests demo -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
       - name: Unit tests
         run: phpunit
+
+  phpstan:
+    name: PHPStan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: "8.4"
+          tools: composer, phpstan:2.3
+          coverage: none
+      - name: Install AtroPIM (PHPStan needs its classes)
+        run: |
+          mkdir -p "$RUNNER_TEMP/atro"
+          cp demo/project/composer.json "$RUNNER_TEMP/atro/"
+          composer install -d "$RUNNER_TEMP/atro" --no-dev --no-scripts --no-plugins --ignore-platform-reqs --no-interaction --no-progress --prefer-dist
+      - name: PHPStan
+        run: ATRO_VENDOR="$RUNNER_TEMP/atro/vendor" phpstan analyse --no-progress --memory-limit=2G --error-format=github
 
   demo:
     runs-on: ubuntu-latest
@@ -30,8 +55,10 @@ jobs:
           --health-cmd "mysqladmin ping -proot" --health-interval 5s --health-timeout 5s --health-retries 20
         ports: ["3306:3306"]
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 22
       - name: Build the demo image (AtroPIM with the module)
