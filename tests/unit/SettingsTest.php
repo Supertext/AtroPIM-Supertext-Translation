@@ -32,6 +32,14 @@ class SettingsTest extends TestCase
         self::assertSame('de-CH', $settings->languageCode('de_DE'));
         self::assertSame('fr-CH', $settings->languageCode('fr_FR'));
         self::assertSame('it-CH', $settings->languageCode('it_CH'));
+        self::assertSame('en-US', $settings->languageCode('en'));
+        self::assertSame('de', $settings->sourceCode('de_DE'));
+        self::assertSame('en', $settings->sourceCode('en_US'));
+
+        $bare = Settings::fromConnectionData(['supertextLanguageCodes' => "de_DE = de
+fr_FR = fr-ch"], 'k');
+        self::assertSame('de-DE', $bare->languageCode('de_DE'));
+        self::assertSame('fr-CH', $bare->languageCode('fr_FR'));
     }
 
     public function testDefaultsAndEnvironmentFallback(): void

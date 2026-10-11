@@ -17,3 +17,6 @@ All notable changes to Supertext Translation for AtroPIM.
 - Retries when the Supertext API answers HTTP 429 (rate limit).
 - English and German labels.
 - Demo for Railway (`demo/`) with demo accounts, four languages, a multilingual attribute, two sample products, the connection and the action created on every start.
+
+### Fixed
+- Target languages without a region (e.g. `de`, or `de` in **Language codes**) are now sent to Supertext as `de-DE` (`fr` → `fr-FR`, `en` → `en-US`, …); Supertext rejects target languages without a region. Codes in **Language codes** are normalized (`fr-ch` → `fr-CH`), and the source language is sent without region, as before.

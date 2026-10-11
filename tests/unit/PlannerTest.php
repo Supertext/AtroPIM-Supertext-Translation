@@ -78,6 +78,6 @@ class PlannerTest extends TestCase
     public function testSupertextCode(): void
     {
         self::assertSame('de-CH', Planner::supertextCode('de_CH'));
-        self::assertSame('en', Planner::supertextCode('en'));
+        self::assertSame('en-US', Planner::supertextCode('en'));
     }
 }

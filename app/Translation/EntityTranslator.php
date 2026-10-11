@@ -272,7 +272,7 @@ final class EntityTranslator
             $html = $client->translateDocument(
                 HtmlDocument::build($chunk),
                 $settings->languageCode($target),
-                $settings->languageCode($source),
+                $settings->sourceCode($source),
                 \in_array($politeness, ['more', 'less'], true) ? $politeness : 'default',
             );
             $translations += HtmlDocument::parse($html, $isHtml);

@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace SupertextTranslation\Translation;
 
+use SupertextTranslation\Api\LanguageCodes;
+
 /**
  * Which fields of a record are translated, and into which languages. No AtroCore dependencies.
  *
@@ -133,9 +135,9 @@ final class Planner
         return trim(str_replace("\u{A0}", ' ', $text)) !== '';
     }
 
-    /** de_DE -> de-DE */
+    /** Supertext target code for an AtroCore language: de_DE -> de-DE, de -> de-DE (see LanguageCodes). */
     public static function supertextCode(string $language): string
     {
-        return str_replace('_', '-', $language);
+        return LanguageCodes::target($language);
     }
 }

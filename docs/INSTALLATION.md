@@ -88,7 +88,7 @@ AtroCore translates between its **languages** (**Administration → Languages**)
 ![Administration → Languages: English as main language, German, French and Italian (Switzerland) as additional languages](images/languages.png)
 
 - A field is translated only if it is **multilingual**: under **Administration → Entities → Product → Fields**, open the field and tick *Multilingual*. AtroPIM's name, short description and long description are multilingual by default. For attributes, tick *Multilingual* on the attribute.
-- Each language goes to Supertext as its code with a hyphen: `de_CH` becomes `de-CH`. If a language needs another Supertext code (e.g. Swiss spelling for a `de_DE` language), add a line `de_DE = de-CH` to the connection's **Language codes**.
+- Each target language goes to Supertext as its code with a hyphen: `de_CH` becomes `de-CH`. A language without a region gets the usual one (`de` → `de-DE`, `fr` → `fr-FR`, `en` → `en-US`, …), because Supertext rejects target languages without one. The source language is sent without region (`en_US` → `en`). If a language needs another Supertext code (e.g. Swiss spelling for a `de_DE` language), add a line `de_DE = de-CH` to the connection's **Language codes**; a code there without region gets the usual one too.
 - The source language is the main language unless the action sets another one.
 
 ## Which fields are translated

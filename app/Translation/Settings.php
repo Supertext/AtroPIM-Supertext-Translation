@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace SupertextTranslation\Translation;
 
 use SupertextTranslation\Api\CurlTransport;
+use SupertextTranslation\Api\LanguageCodes;
 use SupertextTranslation\Api\SupertextClient;
 use SupertextTranslation\Api\SupertextException;
 
@@ -83,10 +84,16 @@ final class Settings
         return $this->timeout >= 30 && $this->timeout <= 1800 ? $this->timeout : self::DEFAULT_TIMEOUT;
     }
 
-    /** Supertext language for an AtroCore language: an override from the connection, else de_CH -> de-CH. */
+    /** Supertext target code for an AtroCore language: an override from the connection, else de_CH -> de-CH, de -> de-DE. */
     public function languageCode(string $language): string
     {
-        return $this->languageCodes[$language] ?? Planner::supertextCode($language);
+        return LanguageCodes::target($language, $this->languageCodes[$language] ?? '');
+    }
+
+    /** Supertext source code for an AtroCore language: the bare language of the override or the language (en_US -> en). */
+    public function sourceCode(string $language): string
+    {
+        return LanguageCodes::source($language, $this->languageCodes[$language] ?? '');
     }
 
     public function client(): SupertextClient
