@@ -20,4 +20,5 @@ All notable changes to Supertext Translation for AtroPIM.
 - Demo for Railway (`demo/`) with demo accounts, four languages, a multilingual attribute, two sample products, the connection and the action created on every start.
 
 ### Fixed
+- Language codes with a variant or extension, e.g. `de-DE-1996` or `en-US-x-twain` in **Language codes**, are now sent to Supertext as `de-DE` / `en-US` (Supertext rejected them).
 - Target languages without a region (e.g. `de`, or `de` in **Language codes**) are now sent to Supertext as `de-DE` (`fr` → `fr-FR`, `en` → `en-US`, …); Supertext rejects target languages without a region. Codes in **Language codes** are normalized (`fr-ch` → `fr-CH`), and the source language is sent without region, as before.
