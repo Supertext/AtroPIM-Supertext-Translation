@@ -154,6 +154,7 @@ The commands use the first Supertext connection (or `SUPERTEXT_API_KEY`) and run
 | "No Supertext API key is configured" | Enter the key in the Supertext connection, or set `SUPERTEXT_API_KEY`. No Supertext account yet? Create one at <https://www.supertext.com/person/en/account/signin>. Generate your API key at <https://www.supertext.com/en/integrations/api> (requires the Admin role). |
 | "Authentication failed. Please check the Supertext API key." | The key is wrong or revoked. Generate a new one at supertext.com → Integrations → API (<https://www.supertext.com/en/integrations/api>, Admin role) and paste it again; **Test connection** confirms it. |
 | "… has no multilingual text fields" | Make the fields multilingual and add a second language (see [Languages](#languages)). |
+| "Supertext does not support this language pair (en → xx-YY)" | The AtroCore language (or its code under the connection's *Language codes*) isn't one Supertext offers. Set a code such as `de-CH` or `fr` there; the message shows the codes that were sent. |
 | "Too many requests to Supertext" | The API limits requests per second. The module retries automatically; if it still fails, translate fewer records at once or use *Execute in background*. |
 | "Timed out waiting for the Supertext translation" | Raise the connection's **Timeout**, or use *Execute in background* for long texts. |
 | "The translation is longer than the field allows" | A plain-text field has a maximum length; the other fields were translated. Shorten the source or raise the field's maximum length. |

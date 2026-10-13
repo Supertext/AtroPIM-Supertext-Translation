@@ -33,6 +33,7 @@ ADD https://raw.githubusercontent.com/atrocore/skeleton-pim-no-demo/master/atroc
 FROM atropim AS build
 COPY composer.json /opt/supertext-module/composer.json
 COPY app /opt/supertext-module/app
+COPY lib /opt/supertext-module/lib
 RUN composer config repositories.supertext '{"type": "path", "url": "/opt/supertext-module", "options": {"symlink": false, "versions": {"supertext/atropim-supertext-translation": "dev-main"}}}' \
  && composer require 'supertext/atropim-supertext-translation:*@dev' --update-no-dev --no-interaction --no-progress --no-scripts \
  && composer dump-autoload --optimize --no-dev \

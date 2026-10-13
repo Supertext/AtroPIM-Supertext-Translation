@@ -21,7 +21,8 @@
   },
   "autoload": {
     "psr-4": {
-      "SupertextTranslation\\": "app/"
+      "SupertextTranslation\\": "app/",
+      "SupertextTranslation\\Sdk\\": "lib/supertext-sdk/src/"
     }
   },
   "autoload-dev": {

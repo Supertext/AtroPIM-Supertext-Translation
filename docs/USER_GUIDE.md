@@ -66,6 +66,7 @@ To translate a changed text again, empty that field in the target language (**Ed
 | `Supertext translated 3 of 4 records.` | Several products: one failed; the action's **Executions** panel (administrators) shows why. |
 | `The translation is longer than the field allows: Name` | The Name translation was too long and not saved; the other fields were. |
 | `No Supertext API key is configured …` / `Authentication failed …` | The Supertext connection isn't set up yet. Ask your administrator. |
+| `Supertext does not support this language pair (en → …)` | Supertext can't translate into this language, or the connection's language code for it is wrong. Tell your administrator. |
 | `Too many requests to Supertext` / `Timed out …` | Supertext was busy or the text was long. Try again in a moment. |
 | `… has no multilingual text fields` | This kind of record has nothing to translate. Ask your administrator. |
 | `Translate with Supertext is finished. To view the result, click here` | AtroPIM's notification when the action has run; the link opens the run's details. |

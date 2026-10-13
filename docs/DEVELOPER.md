@@ -18,7 +18,8 @@ AtroCore loads a module through `composer.json` → `extra.atroId`: the class `\
 | Planning | `app/Translation/Planner.php`, `TextUnit.php` | Which fields are translated (no AtroCore classes: unit-tested). |
 | Settings | `app/Translation/Settings.php`, `ConnectionResolver.php` | Connection data → API key, base URL, timeout, language codes; `SUPERTEXT_API_KEY` / `SUPERTEXT_API_URL` fallbacks. |
 | Console | `app/Console/Check.php`, `Translate.php`, `app/Translation/CommandArguments.php` | `supertext check`, `supertext translate <args>`. |
-| API client | `app/Api/` | Supertext AI file translation API v1 (no AtroCore classes: unit-tested). Same client as the Akeneo bundle. |
+| API client | `app/Api/` | Wrapper around the Supertext SDK (`SupertextClient`, `CallableTransport`), language codes, exception (no AtroCore classes: unit-tested) |
+| Supertext SDK | `lib/supertext-sdk/` | Bundled copy of the Supertext PHP SDK, namespace `SupertextTranslation\Sdk` (see *Supertext SDK*) |
 | Translations | `app/Resources/i18n/{en_US,de_DE,fr_FR,it_IT}/` | Labels, options and tooltips of the new fields (`Action.json`, `Connection.json`) and the messages editors see (`Action.json` → `messages`, keys `supertext…`). |
 | Messages | `app/Translation/Messages.php` | Messages in the user's language through AtroCore's `language` service (`Messages::forUser()`), falling back to the English file; `{name}` placeholders. `SupertextException` carries a key, params and Supertext's untranslated detail; the console uses English (`new Messages()`). No AtroCore classes. |
 
@@ -48,11 +49,21 @@ Auth header: `Authorization: Supertext-Auth-Key <key>`. The header name must be 
 
 Language codes: an AtroCore language (`de_CH`) is sent as `de-CH` unless the connection's *Language codes* set another code. The source is sent as its primary subtag (`en`).
 
+## Supertext SDK
+
+The protocol above, the retries, the language codes and the `data-st-id` document come from the official Supertext PHP SDK ([Supertext/Supertext-API-SDK-and-Guide](https://github.com/Supertext/Supertext-API-SDK-and-Guide)). The module ships a copy in `lib/supertext-sdk/` with its namespace changed from `Supertext\Sdk` to `SupertextTranslation\Sdk` (Composer autoloads it from the module's `composer.json`; `tests/bootstrap.php` and `tests/phpstan-bootstrap.php` too), so sites install nothing extra and another package that requires the SDK itself can't clash with it. HTTP goes through the SDK's `CurlTransport` (ext-curl, which AtroCore requires anyway; proxy environment variables apply). `lib/supertext-sdk/COMMIT` names the SDK revision.
+
+- Never edit `lib/supertext-sdk/`. Fix the SDK in its repository, then run `scripts/vendor-sdk.sh [ref]` (default `main`; `SDK_DIR=/path/to/clone` uses a local clone) and the tests.
+- `app/Api/SupertextClient.php` keeps the module's interface (`translateDocument`, `translateSegments`, `validateApiKey`; a transport or a fake callable) and turns every SDK error code into a `SupertextException` with a `key` (`KEYS`) and `params`; `Translation\Messages` shows the key's text. A new SDK error code needs a key there and its `supertext…` text in all four `i18n/*/Action.json`.
+- PHPStan analyses `app/` only; the SDK has its own checks in its repository.
+- Segments missing from Supertext's answer are left untouched.
+- The live API answers an unknown language (`xx-YY`) with HTTP 404 `INVALID_LANGUAGE_PAIR`; the SDK reports it as `invalid_language_pair` with both codes (message `supertextInvalidLanguagePair`).
+
 ## Language codes
 
 Supertext wants the **source as a bare language** (`en`, `de`, `fr`) and the **target as a regional code** (`de-DE`, `fr-CH`, `en-US`). A bare target such as `de`, or a regional source such as `en-US`, is rejected with `INVALID_LANGUAGE_PAIR`. Translating within one language (`en` → `en-GB`) is allowed.
 
-`app/Api/LanguageCodes.php` (no CMS dependency, `tests/unit/LanguageCodesTest.php`) turns locales into the codes sent:
+`app/Api/LanguageCodes.php` (the SDK's `LanguageCodes` plus the connection's mapping; no CMS dependency, `tests/unit/LanguageCodesTest.php`) turns locales into the codes sent:
 
 - **Source:** the bare language of the source language's line in the connection's **Language codes**, else of the AtroCore language (`en_US` → `en`).
 - **Target:** the target language's line in **Language codes** if there is one, else the AtroCore language. Either way, a code with a region keeps it, normalized (`de_CH`/`de-ch` → `de-CH`; scripts and numeric regions such as `zh-Hant`, `es-419` keep their form); a bare language gets its default region: ar→ar-SA, bg→bg-BG, cs→cs-CZ, da→da-DK, de→de-DE, el→el-GR, en→en-US, es→es-ES, et→et-EE, fi→fi-FI, fr→fr-FR, hr→hr-HR, hu→hu-HU, it→it-IT, ja→ja-JP, ko→ko-KR, lt→lt-LT, lv→lv-LV, nb→nb-NO, nl→nl-NL, pl→pl-PL, pt→pt-PT, ro→ro-RO, ru→ru-RU, sk→sk-SK, sl→sl-SI, sr→sr-RS, sv→sv-SE, th→th-TH, tr→tr-TR, uk→uk-UA, vi→vi-VN, zh→zh-CN (same table as the other Supertext plugins). Unknown bare codes are sent unchanged, so Supertext's error names them.
@@ -82,7 +93,7 @@ phpunit                                                   # PHPUnit 11, no AtroC
 find app tests demo -name '*.php' -print0 | xargs -0 -n1 php -l
 ```
 
-The unit tests cover the API client, the HTML document, chunking, the planner, the settings, the console arguments and the interface languages (`InterfaceLanguagesTest`: the same keys, placeholders and links in all four languages, and an English text for every message key the code uses). `tests/demo-check.sh` is the end-to-end test: it starts the demo image twice against MySQL with the stand-in API (`tests/docs/stand-in.mjs`), checks the demo accounts, translates a product with the console command and the other one with the REST API as the editor, and checks the stored values. CI (`.github/workflows/ci.yml`) runs both, plus PHPStan (see *Code quality and security checks*).
+The unit tests cover the SDK wrapper (protocol, errors, segments, splitting into several documents), the planner, the settings, the console arguments and the interface languages (`InterfaceLanguagesTest`: the same keys, placeholders and links in all four languages, and an English text for every message key the code uses). `tests/demo-check.sh` is the end-to-end test: it starts the demo image twice against MySQL with the stand-in API (`tests/docs/stand-in.mjs`), checks the demo accounts, translates a product with the console command and the other one with the REST API as the editor, and checks the stored values. CI (`.github/workflows/ci.yml`) runs both, plus PHPStan (see *Code quality and security checks*).
 
 ## Demo (Railway)
 

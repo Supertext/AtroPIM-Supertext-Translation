@@ -38,6 +38,7 @@
     "supertextNotALanguage": "«{language}» ist keine Sprache dieses Datensatzes ({languages}).",
     "supertextUnreachable": "Der Supertext-Dienst ist nicht erreichbar.",
     "supertextAuthFailed": "Die Anmeldung ist fehlgeschlagen. Prüfen Sie den Supertext-API-Schlüssel.",
+    "supertextInvalidLanguagePair": "Supertext unterstützt dieses Sprachpaar nicht ({source} → {target}). Prüfen Sie die Sprachzuordnung der Supertext-Verbindung.",
     "supertextNotFound": "Die angeforderte Supertext-Ressource wurde nicht gefunden.",
     "supertextTooLarge": "Der Inhalt ist zu gross, um ihn bei Supertext in einem Durchgang zu übersetzen.",
     "supertextRateLimited": "Zu viele Anfragen an Supertext. Versuchen Sie es in Kürze erneut.",

@@ -13,7 +13,6 @@ namespace SupertextTranslation\Translation;
 use Atro\Core\Container;
 use Atro\Core\Exceptions\NotModified;
 use Espo\ORM\Entity;
-use SupertextTranslation\Api\HtmlDocument;
 use SupertextTranslation\Api\SupertextClient;
 use SupertextTranslation\Api\SupertextException;
 
@@ -259,25 +258,16 @@ final class EntityTranslator
     private function translateUnits(SupertextClient $client, Settings $settings, array $units, array $values, string $source, string $target, string $politeness): array
     {
         $segments = [];
-        $isHtml   = [];
 
         foreach ($units as $index => $unit) {
             $segments[$index] = ['text' => (string) $values[$unit->fieldFor($source)], 'html' => $unit->html];
-            $isHtml[$index]   = $unit->html;
         }
 
-        $translations = [];
-
-        foreach (HtmlDocument::chunks($segments) as $chunk) {
-            $html = $client->translateDocument(
-                HtmlDocument::build($chunk),
-                $settings->languageCode($target),
-                $settings->sourceCode($source),
-                \in_array($politeness, ['more', 'less'], true) ? $politeness : 'default',
-            );
-            $translations += HtmlDocument::parse($html, $isHtml);
-        }
-
-        return $translations;
+        return $client->translateSegments(
+            $segments,
+            $settings->languageCode($target),
+            $settings->sourceCode($source),
+            \in_array($politeness, ['more', 'less'], true) ? $politeness : 'default',
+        );
     }
 }

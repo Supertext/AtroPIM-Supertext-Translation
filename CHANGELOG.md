@@ -6,7 +6,8 @@ All notable changes to Supertext Translation for AtroPIM.
 
 ### Added
 - French and Italian interface (and German where it was missing): labels, tooltips and options, plus the action results and error messages, in the user's interface language.
-- First version for AtroCore 2.4 and AtroPIM 1.16 (tested with AtroCore 2.4.7 and AtroPIM 1.16.10).
+- First version for AtroCore 2.4 and AtroPIM 1.16 (tested with AtroCore 2.4.7 and AtroPIM 1.16.10). All Supertext API calls go through the official Supertext PHP SDK, shipped inside the module (nothing extra to install).
+- Its own message for an unsupported language pair, naming the codes ("Supertext does not support this language pair (en → xx-YY)"), in English, German, French and Italian.
 - Action type *Translate with Supertext*: a button on the record (or in its *More* menu) and a mass action in the list, for products or any other entity; runs in the background with *Execute in background*; every run is logged under the action's *Executions*.
 - Translates multilingual text, Markdown and rich text fields and attribute values, rich text with its formatting; fields that already have text in a target language are kept unless *Overwrite existing translations* is set.
 - Action options: Supertext connection, source language, target languages, overwrite, form of address.

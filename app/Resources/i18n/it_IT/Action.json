@@ -38,6 +38,7 @@
     "supertextNotALanguage": "«{language}» non è una delle lingue di questo record ({languages}).",
     "supertextUnreachable": "Il servizio Supertext non è raggiungibile.",
     "supertextAuthFailed": "Autenticazione non riuscita. Verifichi la chiave API Supertext.",
+    "supertextInvalidLanguagePair": "Supertext non supporta questa coppia di lingue ({source} → {target}). Verifichi l'associazione delle lingue della connessione Supertext.",
     "supertextNotFound": "La risorsa Supertext richiesta non è stata trovata.",
     "supertextTooLarge": "Il contenuto è troppo grande per essere tradotto da Supertext in una sola volta.",
     "supertextRateLimited": "Troppe richieste a Supertext. Riprovi tra poco.",

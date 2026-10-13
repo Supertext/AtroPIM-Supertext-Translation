@@ -10,10 +10,10 @@ declare(strict_types=1);
 
 namespace SupertextTranslation\Translation;
 
-use SupertextTranslation\Api\CurlTransport;
 use SupertextTranslation\Api\LanguageCodes;
 use SupertextTranslation\Api\SupertextClient;
 use SupertextTranslation\Api\SupertextException;
+use SupertextTranslation\Sdk\Http\CurlTransport;
 
 /**
  * The settings of one Supertext connection (Administration → Connections, type "Supertext"),
