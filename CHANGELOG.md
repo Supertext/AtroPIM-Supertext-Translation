@@ -9,6 +9,7 @@ All notable changes to Supertext Translation for AtroPIM.
 - The bundled Supertext SDK is now version 0.2.1 (its `V1` namespace and the API's language list).
 
 ### Added
+- Support for PHP 8.5 (AtroCore 2.4.7 runs on PHP 8.4 and 8.5); lint and unit tests run on both.
 - Read-only field **Languages** on the Supertext connection: each AtroPIM language with the Supertext code it is sent as, or *not mapped*.
 - Formal/informal address is sent only for languages where Supertext offers it; for others (e.g. English) the result says "Supertext offers no formal or informal tone for … : translated with the default tone."
 - New messages "The language … has no Supertext language yet …" and "Supertext offers no formal or informal tone for this language …", in English, German, French and Italian.
