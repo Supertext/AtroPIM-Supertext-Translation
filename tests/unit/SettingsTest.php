@@ -5,6 +5,7 @@ namespace SupertextTranslation\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use SupertextTranslation\Api\SupertextClient;
 use SupertextTranslation\Api\SupertextException;
+use SupertextTranslation\Translation\Messages;
 use SupertextTranslation\Translation\Settings;
 
 class SettingsTest extends TestCase
@@ -19,27 +20,76 @@ class SettingsTest extends TestCase
     public function testConnectionData(): void
     {
         $settings = Settings::fromConnectionData([
-            'supertextEnvironment'   => 'custom',
-            'supertextApiUrl'        => 'https://example.test/v1/',
-            'supertextTimeout'       => 600,
-            'supertextLanguageCodes' => "de_DE = de-CH\nnonsense\nfr_FR: fr-CH",
+            'supertextEnvironment'    => 'custom',
+            'supertextApiUrl'         => 'https://example.test/v1/',
+            'supertextTimeout'        => 600,
+            'supertextLanguageCodes'  => "de_DE = de-CH\nnonsense\nfr_FR: fr-CH\ngsw_CH = gsw-u-sd-chzh\nes_ES = es",
+            'supertextVersionReports' => false,
         ], 'Supertext-Auth-Key abc');
 
         self::assertSame('abc', $settings->apiKey());
         self::assertSame('connection', $settings->apiKeySource());
         self::assertSame('https://example.test/v1/', $settings->baseUrl());
         self::assertSame(600, $settings->timeout());
+        self::assertFalse($settings->versionReports());
+        self::assertSame(['de_DE' => 'de-CH', 'fr_FR' => 'fr-CH', 'gsw_CH' => 'gsw-u-sd-chzh', 'es_ES' => 'es'], $settings->languageMapping());
+        self::assertNull(Settings::fromConnectionData([], '')->versionReports(), 'not set: on by default');
+    }
+
+    public function testTheMappingWinsElseAnExactSupertextCode(): void
+    {
+        $settings = Settings::fromConnectionData(['supertextLanguageCodes' => "de_DE = de-CH\nes_ES = es\nen_US = en-GB"], 'k');
+
         self::assertSame('de-CH', $settings->languageCode('de_DE'));
-        self::assertSame('fr-CH', $settings->languageCode('fr_FR'));
-        self::assertSame('it-CH', $settings->languageCode('it_CH'));
-        self::assertSame('en-US', $settings->languageCode('en'));
+        self::assertSame('es', $settings->languageCode('es_ES'));
+        self::assertSame('it-CH', $settings->languageCode('it_CH'), 'equal to a Supertext code apart from case and _/-');
+        self::assertSame('fr-FR', $settings->languageCode('fr_FR'));
+        self::assertSame('nl', $settings->languageCode('nl'));
+        self::assertSame('zh-Hant', $settings->languageCode('zh_hant'));
+
+        // Sources: the same mapping in its source form, else the matching source language.
         self::assertSame('de', $settings->sourceCode('de_DE'));
         self::assertSame('en', $settings->sourceCode('en_US'));
+        self::assertSame('it', $settings->sourceCode('it_CH'));
+        self::assertSame('', $settings->sourceCode(''));
+    }
 
-        $bare = Settings::fromConnectionData(['supertextLanguageCodes' => "de_DE = de
-fr_FR = fr-ch"], 'k');
-        self::assertSame('de-DE', $bare->languageCode('de_DE'));
-        self::assertSame('fr-CH', $bare->languageCode('fr_FR'));
+    public function testNoGuessing(): void
+    {
+        $settings = new Settings('k');
+
+        foreach (['de', 'es_ES', 'sl_SI', 'zh_CN', 'en'] as $language) {
+            self::assertNull($settings->languageCodeOrNull($language), "$language must be mapped");
+        }
+
+        try {
+            $settings->languageCode('es_ES');
+            self::fail('Expected unsupported_language');
+        } catch (SupertextException $e) {
+            self::assertSame('unsupported_language', $e->key);
+            self::assertSame(['language' => 'es_ES'], $e->params);
+            self::assertStringContainsString('The language es_ES has no Supertext language yet', $e->getMessage());
+            self::assertStringStartsWith('The language es_ES has no Supertext language yet.', (new Messages())->exception($e));
+        }
+
+        $this->expectException(SupertextException::class);
+        $settings->sourceCode('xx_YY');
+    }
+
+    public function testLanguageStatusShowsUnmappedLanguagesAndMissingTones(): void
+    {
+        $settings = Settings::fromConnectionData(['supertextLanguageCodes' => "es_ES = es\nrm_CH = rm\nxx_XX = xx-YY"], 'k');
+        $status   = $settings->languageStatus(['en_US', 'de_CH', 'es_ES', 'sl_SI', 'rm_CH', 'xx_XX'], 'en_US', new Messages());
+
+        self::assertSame(
+            "en_US → en-US (no formal/informal tone) · as source language: en\n"
+            . "de_CH → de-CH\n"
+            . "es_ES → es\n"
+            . 'sl_SI: not mapped. Add a line "sl_SI = …" with its Supertext code to the language mapping; until then it isn\'t translated.' . "\n"
+            . "rm_CH → rm (no formal/informal tone)\n"
+            . "xx_XX → xx-YY (not in Supertext's list of October 2026: sent as entered)",
+            $status,
+        );
     }
 
     public function testDefaultsAndEnvironmentFallback(): void

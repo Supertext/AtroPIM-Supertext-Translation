@@ -11,20 +11,24 @@ declare(strict_types=1);
 namespace SupertextTranslation\Console;
 
 use Atro\Console\AbstractConsole;
-use SupertextTranslation\Api\SupertextException;
+use SupertextTranslation\Sdk\V1\ApiKeyCheck;
 use SupertextTranslation\Translation\ConnectionResolver;
+use SupertextTranslation\Translation\ConnectionStatus;
 use SupertextTranslation\Translation\EntityTranslator;
 use SupertextTranslation\Translation\Messages;
+use SupertextTranslation\Translation\Reporting;
+use SupertextTranslation\Translation\ReportingFactory;
 use SupertextTranslation\Translation\Settings;
 
 /**
- * php console.php supertext check: version, languages, connection, API key (checked against the API).
+ * php console.php supertext check: version, languages and their Supertext codes, connection, API key
+ * (the automatic key check), version reports (sends a `check` report to the Commando Center).
  */
 class Check extends AbstractConsole
 {
     public static function getDescription(): string
     {
-        return 'Supertext Translation: show the version and settings and check the API key.';
+        return 'Supertext Translation: show the version and settings, check the API key and send a check report.';
     }
 
     public function run(array $data): void
@@ -32,7 +36,8 @@ class Check extends AbstractConsole
         $container = $this->getContainer();
         $module    = $container->get('moduleManager')->getModule('SupertextTranslation');
         $version   = $module !== null ? $module->getVersion() : '';
-        $translator = new EntityTranslator($container, new Messages());
+        $messages  = new Messages();
+        $translator = new EntityTranslator($container, $messages);
 
         self::show('Supertext Translation ' . ($version !== '' ? $version : '(version unknown)'), self::INFO);
 
@@ -50,17 +55,27 @@ class Check extends AbstractConsole
         self::show('API endpoint: ' . $settings->baseUrl());
 
         $source = $settings->apiKeySource();
+        self::show('API key: ' . match ($source) {
+            'connection'  => 'from the connection',
+            'environment' => 'from SUPERTEXT_API_KEY',
+            default       => 'missing. ' . Settings::KEY_HELP,
+        });
 
-        if ($source === '') {
-            self::show('API key: missing. ' . Settings::KEY_HELP, self::ERROR, true);
-        }
+        [$languages, $main] = ConnectionStatus::languages($container);
+        self::show("Language mapping:\n  " . str_replace("\n", "\n  ", $settings->languageStatus($languages, $main, $messages)));
 
-        self::show('API key: from ' . ($source === 'connection' ? 'the connection' : 'SUPERTEXT_API_KEY'));
+        // The automatic key check (cost-free GET features), stored for the connection page and sent
+        // to the Supertext Commando Center as a `check` report unless version reports are off.
+        $reporting = ReportingFactory::create($container, $settings);
+        $result    = $reporting->check($settings->apiKey());
+        $check     = $result->check ?? $reporting->latestCheck();
 
-        try {
-            $settings->client()->validateApiKey();
-        } catch (SupertextException $e) {
-            self::show('API key check failed: ' . Settings::explain($e), self::ERROR, true);
+        self::show(Reporting::offByEnvironment($settings->versionReports())
+            ? 'Version reports: off (SUPERTEXT_VERSION_REPORTS)'
+            : ($reporting->isEnabled() ? 'Version reports: on (ping URL ' . $reporting->pingUrl() . ')' . ($result !== null && $result->event !== null ? ', report ' . ($result->sent ? 'sent' : 'not sent') : '') : 'Version reports: off'));
+
+        if ($check === null || $check->status !== ApiKeyCheck::OK) {
+            self::show('API key check: ' . Reporting::checkText($check, $messages), self::ERROR, true);
         }
 
         self::show('API key accepted by Supertext.', self::SUCCESS);

@@ -24,7 +24,7 @@
     "supertextSourceLanguage": "La lingua da cui tradurre. Vuoto: la lingua principale.",
     "supertextTargetLanguages": "Le lingue in cui tradurre. Vuoto: tutte le altre lingue.",
     "supertextOverwrite": "Disattivato: i campi che hanno già un testo in una lingua di destinazione vengono mantenuti. Attivato: vengono sostituiti dalla nuova traduzione.",
-    "supertextPoliteness": "Forma di cortesia formale o informale, per le lingue che le distinguono (p. es. Lei/tu in italiano)."
+    "supertextPoliteness": "Forma di cortesia formale o informale, per le lingue che le distinguono (p. es. Lei/tu in italiano). Supertext non la offre per tutte le lingue (p. es. non per l'inglese, il romancio o l'albanese): queste vengono tradotte con il tono predefinito e il risultato lo segnala."
   },
   "messages": {
     "supertextKeyHelp": "Non ha ancora un account Supertext? Ne crei uno su https://www.supertext.com/person/en/account/signin. Generi la Sua chiave API su https://www.supertext.com/en/integrations/api (supertext.com → Integrations → API; richiede il ruolo Admin).",
@@ -61,6 +61,25 @@
     "supertextError": "errore: {message}",
     "supertextNoTargets": "Nessun'altra lingua in cui tradurre.",
     "supertextRecordsTranslated": "Supertext ha tradotto {done} record su {total}.",
-    "supertextRecordsFailed": "Il pannello Esecuzioni dell'azione ne mostra il motivo."
+    "supertextRecordsFailed": "Il pannello Esecuzioni dell'azione ne mostra il motivo.",
+    "supertextUnsupportedLanguage": "La lingua {language} non è ancora associata a una lingua Supertext. Chieda al Suo amministratore di associarla nell'associazione delle lingue della connessione Supertext (Amministrazione → Connessioni), p. es. «de_DE = de-CH».",
+    "supertextUnsupportedFeature": "Supertext non offre un tono formale o informale per questa lingua. Imposti la forma di cortesia dell'azione su «Predefinita».",
+    "supertextPolitenessSkipped": "Supertext non offre un tono formale o informale per {language}: tradotto con il tono predefinito.",
+    "supertextKeyCheckOk": "Chiave API verificata: la connessione a Supertext funziona.",
+    "supertextKeyCheckInvalid": "Supertext ha rifiutato la chiave API. Verifichi di aver copiato l'intera chiave oppure ne generi una nuova su https://www.supertext.com/en/integrations/api (supertext.com → Integrations → API; richiede il ruolo Admin). Non ha ancora un account Supertext? Ne crei uno su https://www.supertext.com/person/en/account/signin.",
+    "supertextKeyCheckMissing": "Non è ancora stata inserita alcuna chiave API. Non ha ancora un account Supertext? Ne crei uno su https://www.supertext.com/person/en/account/signin. Generi la Sua chiave API su https://www.supertext.com/en/integrations/api (supertext.com → Integrations → API; richiede il ruolo Admin).",
+    "supertextKeyCheckUnreachable": "Non è stato possibile verificare la chiave API perché Supertext non è raggiungibile. Le impostazioni sono salvate; riprovi più tardi.",
+    "supertextKeyCheckError": "Non è stato possibile verificare la chiave API: Supertext ha risposto con un errore ({status}). Le impostazioni sono salvate; riprovi più tardi.",
+    "supertextKeyCheckTime": "Verificata il {time} UTC.",
+    "supertextKeyCheckNone": "Non ancora verificata: salvi la connessione o clicchi su «Testa connessione».",
+    "supertextReportsOn": "Le informazioni sulla versione vengono inviate a Supertext. URL di ping per il Supertext Commando Center: {url}",
+    "supertextReportsOff": "Non vengono inviate informazioni sulla versione a Supertext.",
+    "supertextReportsOffEnvironment": "Non vengono inviate informazioni sulla versione a Supertext: sul server è impostato SUPERTEXT_VERSION_REPORTS=0, che prevale su questa impostazione.",
+    "supertextLanguageMapped": "{language} → {code}",
+    "supertextLanguageNotMapped": "{language}: non associata. Aggiunga all'associazione delle lingue una riga «{language} = …» con il suo codice Supertext; fino ad allora non viene tradotta.",
+    "supertextLanguageNoPoliteness": "(nessun tono formale/informale)",
+    "supertextLanguageUnlisted": "(non presente nell'elenco Supertext di ottobre 2026: inviato come inserito)",
+    "supertextLanguageSource": "· come lingua di partenza: {code}",
+    "supertextLanguageSourceNotMapped": "· come lingua di partenza: non associata"
   }
 }

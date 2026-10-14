@@ -10,10 +10,11 @@ declare(strict_types=1);
 
 namespace SupertextTranslation\Translation;
 
-use SupertextTranslation\Api\LanguageCodes;
 use SupertextTranslation\Api\SupertextClient;
 use SupertextTranslation\Api\SupertextException;
 use SupertextTranslation\Sdk\Http\CurlTransport;
+use SupertextTranslation\Sdk\V1\Languages;
+use SupertextTranslation\Sdk\V1\SupertextException as SdkException;
 
 /**
  * The settings of one Supertext connection (Administration → Connections, type "Supertext"),
@@ -27,15 +28,17 @@ final class Settings
     public const DEFAULT_TIMEOUT = 180;
     public const KEY_HELP = 'No Supertext account yet? Create one at ' . self::SIGNUP_URL . '. Generate your API key at ' . self::API_KEY_URL . ' (supertext.com → Integrations → API; requires the Admin role).';
 
-    /** @var array<string, string> AtroCore language code => Supertext language code */
+    /** @var array<string, string> AtroCore language code => Supertext language code (the connection's language mapping) */
     private array $languageCodes;
 
+    /** @param bool|null $versionReports the connection's "Send version information to Supertext"; null: not set (on) */
     public function __construct(
         private readonly string $apiKey,
         private readonly string $environment = 'live',
         private readonly string $customUrl = '',
         private readonly int $timeout = self::DEFAULT_TIMEOUT,
         string $languageCodes = '',
+        private readonly ?bool $versionReports = null,
     ) {
         $this->languageCodes = self::parseLanguageCodes($languageCodes);
     }
@@ -49,7 +52,20 @@ final class Settings
             (string) ($data['supertextApiUrl'] ?? ''),
             (int) ($data['supertextTimeout'] ?? self::DEFAULT_TIMEOUT),
             (string) ($data['supertextLanguageCodes'] ?? ''),
+            isset($data['supertextVersionReports']) ? (bool) $data['supertextVersionReports'] : null,
         );
+    }
+
+    /** The "Send version information to Supertext" setting; null when it was never saved (on). */
+    public function versionReports(): ?bool
+    {
+        return $this->versionReports;
+    }
+
+    /** @return array<string, string> the language mapping: AtroCore language => Supertext code */
+    public function languageMapping(): array
+    {
+        return $this->languageCodes;
     }
 
     public function apiKey(): string
@@ -84,16 +100,85 @@ final class Settings
         return $this->timeout >= 30 && $this->timeout <= 1800 ? $this->timeout : self::DEFAULT_TIMEOUT;
     }
 
-    /** Supertext target code for an AtroCore language: an override from the connection, else de_CH -> de-CH, de -> de-DE. */
+    /**
+     * Supertext target code for an AtroCore language: the connection's language mapping, else the
+     * Supertext code it equals apart from case and _/- (de_CH → de-CH, es → es). No guessing: anything
+     * else throws unsupported_language and nothing is sent.
+     *
+     * @throws SupertextException key unsupported_language
+     */
     public function languageCode(string $language): string
     {
-        return LanguageCodes::target($language, $this->languageCodes[$language] ?? '');
+        try {
+            return Languages::target($language, $this->languageCodes);
+        } catch (SdkException $e) {
+            throw SupertextClient::fromSdk($e);
+        }
     }
 
-    /** Supertext source code for an AtroCore language: the bare language of the override or the language (en_US -> en). */
+    /**
+     * Supertext source code for an AtroCore language, from the same mapping (a mapped de-CH is sent as
+     * de), else the matching Supertext source language (en_US → en).
+     *
+     * @throws SupertextException key unsupported_language
+     */
     public function sourceCode(string $language): string
     {
-        return LanguageCodes::source($language, $this->languageCodes[$language] ?? '');
+        try {
+            return Languages::source($language, $this->languageCodes);
+        } catch (SdkException $e) {
+            throw SupertextClient::fromSdk($e);
+        }
+    }
+
+    /** The target code, or null when the language has none (not mapped). */
+    public function languageCodeOrNull(string $language): ?string
+    {
+        try {
+            return $this->languageCode($language);
+        } catch (SupertextException) {
+            return null;
+        }
+    }
+
+    /**
+     * One line per AtroCore language for the connection's "Languages" field: its Supertext code (and
+     * the source code for the main language), "not mapped", and a note where Supertext offers no
+     * formal/informal tone.
+     *
+     * @param list<string> $languages the main language first
+     */
+    public function languageStatus(array $languages, string $mainLanguage, Messages $messages): string
+    {
+        $lines = [];
+
+        foreach ($languages as $language) {
+            $target = $this->languageCodeOrNull($language);
+
+            if ($target === null) {
+                $line = $messages->text('language_not_mapped', ['language' => $language]);
+            } else {
+                $line = $messages->text('language_mapped', ['language' => $language, 'code' => $target]);
+
+                if (Languages::supportsPoliteness($target) === false) {
+                    $line .= ' ' . $messages->text('language_no_politeness');
+                } elseif (!Languages::isSupportedTarget($target)) {
+                    $line .= ' ' . $messages->text('language_unlisted');
+                }
+            }
+
+            if ($language === $mainLanguage) {
+                try {
+                    $line .= ' ' . $messages->text('language_source', ['code' => $this->sourceCode($language)]);
+                } catch (SupertextException) {
+                    $line .= ' ' . $messages->text('language_source_not_mapped');
+                }
+            }
+
+            $lines[] = $line;
+        }
+
+        return implode("\n", $lines);
     }
 
     public function client(): SupertextClient
@@ -102,7 +187,8 @@ final class Settings
     }
 
     /**
-     * "de_DE = de-CH" per line (also "de_DE: de-CH"); invalid lines are ignored.
+     * "de_DE = de-CH" per line (also "de_DE: de-CH", "zh_CN = zh-Hans", "gsw_CH = gsw-u-sd-chzh");
+     * invalid lines are ignored.
      *
      * @return array<string, string>
      */
@@ -111,7 +197,7 @@ final class Settings
         $codes = [];
 
         foreach (preg_split('/\R/', $text) ?: [] as $line) {
-            if (preg_match('/^\s*([a-z]{2,3}(?:_[A-Za-z0-9]+)*)\s*[=:]\s*([A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*)\s*$/', $line, $m)) {
+            if (preg_match('/^\s*([a-z]{2,3}(?:_[A-Za-z0-9]+)*)\s*[=:]\s*([A-Za-z]{2,3}(?:-[A-Za-z0-9]{1,8})*)\s*$/', $line, $m)) {
                 $codes[$m[1]] = $m[2];
             }
         }

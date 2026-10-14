@@ -121,6 +121,60 @@
           ]
         }
       }
+    },
+    "supertextVersionReports": {
+      "type": "bool",
+      "notStorable": true,
+      "dataField": true,
+      "default": true,
+      "tooltip": true,
+      "conditionalProperties": {
+        "visible": {
+          "conditionGroup": [
+            {
+              "type": "equals",
+              "attribute": "type",
+              "value": "supertext"
+            }
+          ]
+        }
+      }
+    },
+    "supertextKeyCheck": {
+      "type": "text",
+      "notStorable": true,
+      "dataField": true,
+      "readOnly": true,
+      "tooltip": true,
+      "conditionalProperties": {
+        "visible": {
+          "conditionGroup": [
+            {
+              "type": "equals",
+              "attribute": "type",
+              "value": "supertext"
+            }
+          ]
+        }
+      }
+    },
+    "supertextLanguageStatus": {
+      "type": "text",
+      "notStorable": true,
+      "dataField": true,
+      "readOnly": true,
+      "tooltip": true,
+      "conditionalProperties": {
+        "visible": {
+          "conditionGroup": [
+            {
+              "type": "equals",
+              "attribute": "type",
+              "value": "supertext"
+            }
+          ]
+        }
+      }
     }
   }
 }

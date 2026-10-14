@@ -36,7 +36,7 @@ final class SupertextClientTest extends TestCase
             };
         });
 
-        $html = $client->translateDocument('<div data-st-id="0">Hello</div>', 'de-CH', 'en-GB', 'more');
+        $html = $client->translateDocument('<div data-st-id="0">Hello</div>', 'de-CH', 'en', 'more');
 
         self::assertStringContainsString('Hallo', $html);
         self::assertSame(
@@ -53,7 +53,7 @@ final class SupertextClientTest extends TestCase
         self::assertStringContainsString("filename=\"content.html\"\r\nContent-Type: text/html\r\n\r\n<div", $post['body']);
     }
 
-    public function testSendsBareTargetsWithTheirDefaultRegion(): void
+    public function testSendsLanguageCodesAsGiven(): void
     {
         $client = $this->client(fn (string $method, string $url) => match (true) {
             $method === 'POST'                  => ['status' => 200, 'body' => '{"file_id":"f1"}'],
@@ -62,9 +62,10 @@ final class SupertextClientTest extends TestCase
             default                             => ['status' => 200, 'body' => '{}'],
         });
 
-        $client->translateDocument('<div data-st-id="0">Hello</div>', 'de', 'en_US');
+        // No default regions any more: Settings resolves the codes (Languages), the client sends them as they are.
+        $client->translateDocument('<div data-st-id="0">Hello</div>', 'es', 'en');
 
-        self::assertStringContainsString("name=\"target_lang\"\r\n\r\nde-DE\r\n", $this->calls[0]['body']);
+        self::assertStringContainsString("name=\"target_lang\"\r\n\r\nes\r\n", $this->calls[0]['body']);
         self::assertStringContainsString("name=\"source_lang\"\r\n\r\nen\r\n", $this->calls[0]['body']);
     }
 
@@ -194,6 +195,19 @@ final class SupertextClientTest extends TestCase
             self::assertSame('invalid_language_pair', $e->key);
             self::assertSame(['source' => 'en', 'target' => 'xx-YY'], $e->params);
             self::assertStringStartsWith('Supertext does not support this language pair (en → xx-YY).', $e->getMessage());
+        }
+    }
+
+    public function testReportsAnUnsupportedTone(): void
+    {
+        $client = $this->client(fn () => ['status' => 400, 'body' => '{"error_code":"FEATURE_ERROR","feature":"politeness","target_lang":"en-US"}']);
+
+        try {
+            $client->translateDocument('<p>x</p>', 'en-US', 'de', 'more');
+            self::fail('Expected an exception');
+        } catch (SupertextException $e) {
+            self::assertSame('unsupported_feature', $e->key);
+            self::assertStringStartsWith('Supertext offers no formal or informal tone', $e->getMessage());
         }
     }
 

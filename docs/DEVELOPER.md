@@ -12,14 +12,16 @@ AtroCore loads a module through `composer.json` → `extra.atroId`: the class `\
 | Action type | `app/ActionTypes/SupertextTranslate.php`, `app/Resources/metadata/action/types.json` | The action type `supertextTranslate`. AtroCore's action framework provides the record button, the mass action, background jobs (*Execute in background*), *Execute as*, conditions and the execution log; `execute()` translates one record (mass actions call it once per record) and writes the summary to the execution and its log. |
 | Action routes | `app/Handlers/Action/SupertextTranslate{,Async}Handler.php` | `POST /api/Action/{id}/supertextTranslate` and `…Async`, the URLs AtroCore's front end calls for an action type. |
 | Action options | `app/Resources/metadata/entityDefs/Action.json`, `app/Listeners/ActionLayout.php`, `app/Listeners/Metadata.php` | Real columns on `action` (`supertext_connection_id`, `supertext_source_language`, `supertext_target_languages`, `supertext_overwrite`, `supertext_politeness`), visible for this type only; the layout listener adds them to the form, the metadata listener fills the language options from the configured languages. |
-| Connection type | `app/ConnectionType/ConnectionSupertext.php`, `app/Resources/metadata/app/connectionTypes.json`, `entityDefs/Connection.json`, `app/Listeners/ConnectionLayout.php` | Connection type `supertext`: API key (a `password` field, encrypted by AtroCore), environment, URL, timeout, language codes, all stored in the connection's `data` JSON (`dataField`). *Test connection* calls `GET features`. |
+| Connection type | `app/ConnectionType/ConnectionSupertext.php`, `app/Resources/metadata/app/connectionTypes.json`, `entityDefs/Connection.json`, `app/Listeners/ConnectionLayout.php` | Connection type `supertext`, the module's settings page: API key (a `password` field, encrypted by AtroCore), environment, URL, timeout, language mapping (`supertextLanguageCodes`), *Send version information to Supertext* (`supertextVersionReports`, bool, default on) and the read-only `supertextKeyCheck` / `supertextLanguageStatus`, all stored in the connection's `data` JSON (`dataField`). *Test connection* runs the reporter's key check (see *Commando Center*). |
+| Connection events | `app/Listeners/ConnectionService.php`, `app/Translation/ConnectionStatus.php` | `afterReadEntity`: fills the two read-only fields in the viewer's language, then the reporter's `onRequest` after the response; `afterCreateEntity`/`afterUpdateEntity`: `afterSettingsSaved` (key check, report), then stores both fields (`saveEntity(…, ['skipAll' => true])`: no hooks, no history) so the form shows the result at once; `before…Entity` drops the read-only fields from incoming data. |
+| Commando Center | `app/Translation/Reporting.php`, `ReportingFactory.php`, `app/Handlers/Supertext/PingHandler.php` | Version reports, the automatic API key check and the public ping `GET /api/supertext/ping` (see *Commando Center*). |
 | Result message | `app/Listeners/ActionService.php` | `afterExecuteNow`: replaces AtroCore's "Action … was executed" with the summary ("de_CH, fr_CH: translated (4 fields)", or counts for a mass action). |
 | Translation | `app/Translation/EntityTranslator.php` | Loads the record through its record service, plans, sends one HTML document per target language, saves with the record service's `updateEntity()` (ACL, validation, hooks, history). |
 | Planning | `app/Translation/Planner.php`, `TextUnit.php` | Which fields are translated (no AtroCore classes: unit-tested). |
-| Settings | `app/Translation/Settings.php`, `ConnectionResolver.php` | Connection data → API key, base URL, timeout, language codes; `SUPERTEXT_API_KEY` / `SUPERTEXT_API_URL` fallbacks. |
+| Settings | `app/Translation/Settings.php`, `ConnectionResolver.php` | Connection data → API key, base URL, timeout, language mapping (Supertext codes through the SDK's `Languages`), the reporting setting; `SUPERTEXT_API_KEY` / `SUPERTEXT_API_URL` fallbacks. |
 | Console | `app/Console/Check.php`, `Translate.php`, `app/Translation/CommandArguments.php` | `supertext check`, `supertext translate <args>`. |
-| API client | `app/Api/` | Wrapper around the Supertext SDK (`SupertextClient`, `CallableTransport`), language codes, exception (no AtroCore classes: unit-tested) |
-| Supertext SDK | `lib/supertext-sdk/` | Bundled copy of the Supertext PHP SDK, namespace `SupertextTranslation\Sdk` (see *Supertext SDK*) |
+| API client | `app/Api/` | Wrapper around the Supertext SDK (`SupertextClient`, `CallableTransport`) and the exception (no AtroCore classes: unit-tested) |
+| Supertext SDK | `lib/supertext-sdk/` | Bundled copy of the Supertext PHP SDK, namespace `SupertextTranslation\Sdk` (API classes in `SupertextTranslation\Sdk\V1`; see *Supertext SDK*) |
 | Translations | `app/Resources/i18n/{en_US,de_DE,fr_FR,it_IT}/` | Labels, options and tooltips of the new fields (`Action.json`, `Connection.json`) and the messages editors see (`Action.json` → `messages`, keys `supertext…`). |
 | Messages | `app/Translation/Messages.php` | Messages in the user's language through AtroCore's `language` service (`Messages::forUser()`), falling back to the English file; `{name}` placeholders. `SupertextException` carries a key, params and Supertext's untranslated detail; the console uses English (`new Messages()`). No AtroCore classes. |
 
@@ -38,7 +40,7 @@ AtroCore loads a module through `composer.json` → `extra.atroId`: the class `\
 
 Shared with the WordPress plugin and every other Supertext plugin:
 
-1. `POST {base}translate/ai/file`: multipart with `file` (part `Content-Type` exactly `text/html`, no charset, or the API answers 415), `target_lang` (with a region, e.g. `de-CH`), optional `source_lang` (bare language, e.g. `en`); see *Language codes*, optional `politeness` (`more`/`less`). Returns `{file_id}`.
+1. `POST {base}translate/ai/file`: multipart with `file` (part `Content-Type` exactly `text/html`, no charset, or the API answers 415), `target_lang` (a Supertext target code, e.g. `de-CH` or `es`), optional `source_lang` (bare language, e.g. `en`); see *Language codes*, optional `politeness` (`more`/`less`, only for targets that offer it). Returns `{file_id}`.
 2. `GET …/{file_id}/status` until `done` (`error`, `limit_exceeded`, `deleted` are terminal).
 3. `GET …/{file_id}/translation` returns the translated HTML.
 4. `DELETE …/{file_id}` (files also expire after 24 h).
@@ -47,29 +49,51 @@ Auth header: `Authorization: Supertext-Auth-Key <key>`. The header name must be 
 
 **Rate limit:** the API limits requests per second per key (HTTP 429). The client retries a 429 up to 4 times, waiting for `Retry-After` if sent, otherwise 1, 2, 4 and 8 seconds plus jitter. Target languages are translated one after the other.
 
-Language codes: an AtroCore language (`de_CH`) is sent as `de-CH` unless the connection's *Language codes* set another code. The source is sent as its primary subtag (`en`).
+Language codes: see *Language codes* (the connection's mapping, else an exact Supertext code, else `unsupported_language`).
 
 ## Supertext SDK
 
-The protocol above, the retries, the language codes and the `data-st-id` document come from the official Supertext PHP SDK ([Supertext/Supertext-API-SDK-and-Guide](https://github.com/Supertext/Supertext-API-SDK-and-Guide)). The module ships a copy in `lib/supertext-sdk/` with its namespace changed from `Supertext\Sdk` to `SupertextTranslation\Sdk` (Composer autoloads it from the module's `composer.json`; `tests/bootstrap.php` and `tests/phpstan-bootstrap.php` too), so sites install nothing extra and another package that requires the SDK itself can't clash with it. HTTP goes through the SDK's `CurlTransport` (ext-curl, which AtroCore requires anyway; proxy environment variables apply). `lib/supertext-sdk/COMMIT` names the SDK revision.
+The protocol above, the retries, the list of Supertext languages, the version reports and the `data-st-id` document come from the official Supertext PHP SDK ([Supertext/Supertext-API-SDK-and-Guide](https://github.com/Supertext/Supertext-API-SDK-and-Guide)). The module ships a copy in `lib/supertext-sdk/` with its namespace changed from `Supertext\Sdk` to `SupertextTranslation\Sdk` (Composer autoloads it from the module's `composer.json`; `tests/bootstrap.php` and `tests/phpstan-bootstrap.php` too), so sites install nothing extra and another package that requires the SDK itself can't clash with it. HTTP goes through the SDK's `CurlTransport` (ext-curl, which AtroCore requires anyway; proxy environment variables apply). `lib/supertext-sdk/COMMIT` names the SDK revision.
 
+- Since SDK 0.2.0 everything that talks to the API is in the namespace of its API version, `SupertextTranslation\Sdk\V1` (`src/V1/`); only the HTTP transport (`…\Sdk\Http`) and `…\Sdk\Supertext::SDK_VERSION` are version-neutral. The vendor script copies `src/` with its subfolders and rewrites every `Supertext\Sdk\` prefix, `V1` included.
 - Never edit `lib/supertext-sdk/`. Fix the SDK in its repository, then run `scripts/vendor-sdk.sh [ref]` (default `main`; `SDK_DIR=/path/to/clone` uses a local clone) and the tests.
 - `app/Api/SupertextClient.php` keeps the module's interface (`translateDocument`, `translateSegments`, `validateApiKey`; a transport or a fake callable) and turns every SDK error code into a `SupertextException` with a `key` (`KEYS`) and `params`; `Translation\Messages` shows the key's text. A new SDK error code needs a key there and its `supertext…` text in all four `i18n/*/Action.json`.
 - PHPStan analyses `app/` only; the SDK has its own checks in its repository.
 - Segments missing from Supertext's answer are left untouched.
-- The live API answers an unknown language (`xx-YY`) with HTTP 404 `INVALID_LANGUAGE_PAIR`; the SDK reports it as `invalid_language_pair` with both codes (message `supertextInvalidLanguagePair`).
+- The live API answers an unknown language (`xx-YY`) with HTTP 404 `INVALID_LANGUAGE_PAIR`; the SDK reports it as `invalid_language_pair` with both codes (message `supertextInvalidLanguagePair`). A language without a Supertext code never reaches the API: `Languages::target()`/`source()` throw `unsupported_language` (message `supertextUnsupportedLanguage`, with `{language}`); a tone the target doesn't offer comes back as `unsupported_feature` (`supertextUnsupportedFeature`).
 
 ## Language codes
 
-Supertext wants the **source as a bare language** (`en`, `de`, `fr`) and the **target as a regional code** (`de-DE`, `fr-CH`, `en-US`). A bare target such as `de`, or a regional source such as `en-US`, is rejected with `INVALID_LANGUAGE_PAIR`. Translating within one language (`en` → `en-GB`) is allowed.
+Supertext accepts only the codes of `GET features` (the SDK's `Languages::TARGETS` / `SOURCES`): targets are regional only for German, English, French, Italian and Portuguese (`de-CH`, `en-US`, `pt-BR`), a script for Chinese and Serbian (`zh-Hans`, `sr-Latn`), a dialect for Swiss German (`gsw-u-sd-chzh`), and **bare for all others** (`es`, `nl`, `sl`, …); sources are bare (`en`). The old default regions (`es-ES`, `sl-SI`, `zh-CN`) are rejected by the live API, so there is no guessing any more.
 
-`app/Api/LanguageCodes.php` (the SDK's `LanguageCodes` plus the connection's mapping; no CMS dependency, `tests/unit/LanguageCodesTest.php`) turns locales into the codes sent:
+`Settings::languageCode()` / `sourceCode()` (no AtroCore classes, `tests/unit/SettingsTest.php`) resolve every AtroCore language with `Languages::target($code, $mapping)` / `Languages::source($code, $mapping)`, using **one** mapping for both: the connection's **Language mapping** (`supertextLanguageCodes`, `"de_DE = de-CH"` per line) wins, else an exact match (case and `_`/`-` ignored: `de_CH` → `de-CH`, `en_US` → source `en`), else `unsupported_language` (a `SupertextException` with key `unsupported_language` and `{language}`; nothing is sent). A mapped target is sent in its source form when the language is the source (`de_DE = de-CH` → source `de`, since SDK 0.2.1). A mapping value that isn't in the SDK's list is sent as entered.
 
-- **Source:** the bare language of the source language's line in the connection's **Language codes**, else of the AtroCore language (`en_US` → `en`).
-- **Target:** the target language's line in **Language codes** if there is one, else the AtroCore language. Either way, a code with a region keeps it, normalized (`de_CH`/`de-ch` → `de-CH`; scripts and numeric regions such as `zh-Hant`, `es-419` keep their form; variants and extensions are dropped: `de-DE-1996` → `de-DE`, `en-US-x-twain` → `en-US`); a bare language gets its default region: ar→ar-SA, bg→bg-BG, cs→cs-CZ, da→da-DK, de→de-DE, el→el-GR, en→en-US, es→es-ES, et→et-EE, fi→fi-FI, fr→fr-FR, hr→hr-HR, hu→hu-HU, it→it-IT, ja→ja-JP, ko→ko-KR, lt→lt-LT, lv→lv-LV, nb→nb-NO, nl→nl-NL, pl→pl-PL, pt→pt-PT, ro→ro-RO, ru→ru-RU, sk→sk-SK, sl→sl-SI, sr→sr-RS, sv→sv-SE, th→th-TH, tr→tr-TR, uk→uk-UA, vi→vi-VN, zh→zh-CN (same table as the other Supertext plugins). Unknown bare codes are sent unchanged, so Supertext's error names them.
+`EntityTranslator` resolves the source once (an unmapped source fails the whole run) and each target in its loop (an unmapped target fails only that language). Formal/informal is sent only where `Languages::supportsPoliteness($target)` isn't `false`; otherwise the language is translated with the default tone and its result carries `supertextPolitenessSkipped`, so the setting is never dropped silently. `Settings::languageStatus()` builds the connection's read-only **Languages** field (code, *not mapped*, *no formal/informal tone*, *not in the list*) and the `supertext check` output.
 
-`Settings::languageCode()` / `sourceCode()` feed `SupertextClient`, which applies the same rule to whatever it is given; the stand-in (`tests/docs/stand-in.mjs`) rejects bare targets and regional sources like the real API.
+The demo's languages (`en_US`, `de_CH`, `fr_CH`, `it_CH`) are exact Supertext codes and need no mapping. The stand-in (`tests/docs/stand-in.mjs`) accepts only Supertext's codes, like the real API.
 
+## Commando Center
+
+Every Supertext plugin reports to the Supertext Commando Center (protocol: Commando-Center-Supertext-Translation → `docs/DEVELOPER.md` → *Report protocol*). The protocol is the SDK's `InstallationReporter`; the module only supplies what AtroCore knows:
+
+- `app/Translation/Reporting.php` (no AtroCore classes, `tests/unit/ReportingTest.php`): builds the reporter (`plugin.name` = `AtroPIM-Supertext-Translation`, the GitHub repository name), wraps every call so nothing ever throws, keeps the state through two closures, and builds the texts of the read-only **API key check** field (the center's messages in en/de/fr/it, `Action.json` → `messages` → `supertextKeyCheck…`, with the bare URLs since the field is plain text).
+- `app/Translation/ReportingFactory.php` (AtroCore glue): `siteUrl` = AtroCore's `siteUrl` (the request's host if empty), `plugin.version` = the module's Composer version (`moduleManager->getModule('SupertextTranslation')->getVersion()`, the same source *Updates & Modules* and `supertext check` show), `system` = `AtroPIM` and the Pim module's version (`AtroCore` and `SoftwarePackage::getCoreVersion()` without AtroPIM), runtime PHP. `callbackUrl` = `<siteUrl>/api/supertext/ping`. The API base URL of the key check is the connection's (so `SUPERTEXT_API_URL` and *Staging* apply).
+- **State:** AtroCore's config file (`data/config.php`, key `supertextReporter`, the reporter's JSON as it is; written only when it changed, through `Config::save()`, which merges only the changed key). `Settings::getConfigData()` never sends it to the browser (only declared settings fields). It holds the key's SHA-256 fingerprint, never the key.
+- **Setting:** `supertextVersionReports` on the connection (null = never saved = on), combined with `SUPERTEXT_VERSION_REPORTS` by `InstallationReporter::reportsEnabled()`. With several connections, the one saved or used counts; the ping follows the first connection.
+
+When the reporter runs:
+
+| Moment | Where | Reporter call |
+| --- | --- | --- |
+| Connection created or saved | `ConnectionService::afterCreateEntity` / `afterUpdateEntity` | `afterSettingsSaved` (result stored in the read-only field) |
+| Connection shown | `ConnectionService::afterReadEntity` | `onRequest`, after the response (`ReportingFactory::defer()`) |
+| *Test connection* | `ConnectionSupertext::testConnection` | `testConnection`; anything but `ok` is shown as the error |
+| A translation (action, mass action, job, `supertext translate`) | `EntityTranslator::translate` → `ReportingFactory::afterTranslation()` | once per process, at its end: `authenticationFailed` if Supertext answered 401/403 (`markAuthenticationFailed()`), else `onRequest` |
+| `supertext check` | `Console\Check` | `testConnection`, then `reportCheck` |
+
+`defer()` registers a shutdown function that first ends the response (`fastcgi_finish_request()` under PHP-FPM; under mod_php it flushes the output and runs right after), so reports never delay or fail the work. Front-end requests never run it (AtroCore has none that run the module).
+
+**Ping endpoint:** `app/Handlers/Supertext/PingHandler.php`, `#[Route(path: '/supertext/ping', methods: ['GET'], auth: false, skipActionHistory: true)]` → `GET /api/supertext/ping`. AtroCore's `AuthMiddleware` lets it through without credentials (`useNoAuth()`), no session, no CSRF; the API has no page cache. It answers `InstallationReporter::pingResponse()` exactly (status, headers, body as a Guzzle PSR-7 response); the 200, 400 and 404 answers are declared in the route attribute because AtroCore validates responses against it.
 
 ## Local development
 
@@ -93,7 +117,7 @@ phpunit                                                   # PHPUnit 11, no AtroC
 find app tests demo -name '*.php' -print0 | xargs -0 -n1 php -l
 ```
 
-The unit tests cover the SDK wrapper (protocol, errors, segments, splitting into several documents), the planner, the settings, the console arguments and the interface languages (`InterfaceLanguagesTest`: the same keys, placeholders and links in all four languages, and an English text for every message key the code uses). `tests/demo-check.sh` is the end-to-end test: it starts the demo image twice against MySQL with the stand-in API (`tests/docs/stand-in.mjs`), checks the demo accounts, translates a product with the console command and the other one with the REST API as the editor, and checks the stored values. CI (`.github/workflows/ci.yml`) runs both, plus PHPStan (see *Code quality and security checks*).
+The unit tests cover the SDK wrapper (protocol, errors, segments, splitting into several documents), the planner, the settings and the language mapping (no guessing, unmapped languages, the **Languages** field), the reporting (each reporter call, state storage, off by setting or environment, the hour after a failed report, the ping answers, the key check texts; against a fake transport, never the live API or center), the console arguments and the interface languages (`InterfaceLanguagesTest`: the same keys, placeholders and links in all four languages, and an English text for every message key the code uses). `tests/demo-check.sh` is the end-to-end test: it starts the demo image twice against MySQL with the stand-in API (`tests/docs/stand-in.mjs`), checks the demo accounts, translates a product with the console command and the other one with the REST API as the editor, and checks the stored values; it also checks `supertext check`, the reports the stand-in received as Commando Center (`SUPERTEXT_REPORT_URL`: `installed` and `check`, plugin, system, site URL, callback, key check, never the key) and the public ping endpoint (200 with the challenge, 400, `Cache-Control: no-store`). CI (`.github/workflows/ci.yml`) runs both, plus PHPStan (see *Code quality and security checks*).
 
 ## Demo (Railway)
 
@@ -117,6 +141,8 @@ Everything is created only if missing; existing records and accounts are never c
 | `ATROPIM_DB_NAME` | The demo's own database (default `atropim`). |
 | `SUPERTEXT_API_KEY` | The Supertext key the demo's connection falls back to. |
 | `SUPERTEXT_API_URL` | Only for tests against the stand-in. |
+| `SUPERTEXT_VERSION_REPORTS` | `0` turns the Commando Center reports off (default on: the demo reports like any installation). |
+| `SUPERTEXT_REPORT_URL` | Only for tests: where reports go instead of the Commando Center (the stand-in: `http://127.0.0.1:8765/report`). |
 | `DEMO_SITE_URL` | Public URL, if it isn't `https://$RAILWAY_PUBLIC_DOMAIN`. |
 | `PORT` | Set by Railway (default 8080). |
 
@@ -140,7 +166,8 @@ docker exec <container> demo-console supertext check
 ```bash
 cd tests/docs && npm install
 node stand-in.mjs &
-# a fresh demo with SUPERTEXT_API_URL=http://127.0.0.1:8765/v1/ and DEMO_* set, on port 8095
+# a fresh demo with SUPERTEXT_API_URL=http://127.0.0.1:8765/v1/, SUPERTEXT_REPORT_URL=http://127.0.0.1:8765/report
+# (the stand-in also answers reports, so screenshots never report to the live center) and DEMO_* set, on port 8095
 BASE_URL=http://127.0.0.1:8095 DEMO_ADMIN_EMAIL=… DEMO_ADMIN_PASSWORD=… DEMO_EDITOR_EMAIL=… DEMO_EDITOR_PASSWORD=… node screenshots.mjs
 ```
 
@@ -165,7 +192,7 @@ Releases are published by `.github/workflows/release.yml` when the version is of
 
 ## Conventions
 
-- PSR-12, PHP 8.4, strict types; keep `app/Api/`, `Planner`, `TextUnit`, `Settings`, `Messages` and `CommandArguments` free of AtroCore classes (the unit tests run without AtroCore).
+- PSR-12, PHP 8.4, strict types; keep `app/Api/`, `Planner`, `TextUnit`, `Settings`, `Messages`, `Reporting` and `CommandArguments` free of AtroCore classes (the unit tests run without AtroCore).
 - Interface languages: every label, tooltip, option and message goes into all four `i18n` folders (`en_US`, `de_DE`, `fr_FR`, `it_IT`) in the same commit. Formal address (Sie, vous, Lei), AtroCore's own terms in each language (e.g. *Verwaltung → Verbindungen*, *Administration → Connexions*, *Amministrazione → Connessioni*, *enregistrement*, *action de masse*), and never translate "Supertext", `{placeholders}` or URLs. New messages: a snake_case key (`$messages->text('no_text')`) whose text is `messages` → `supertextNoText` in `Action.json`.
 - New action or connection options: `entityDefs/Action.json` or `Connection.json`, the layout listener, all four `i18n` folders (label, tooltip, options) **and** the settings tables in [INSTALLATION.md](INSTALLATION.md#settings).
 - The module id `SupertextTranslation`, the action type `supertextTranslate`, the connection type `supertext` and the field names `supertext*` are stored in users' databases; renaming them is a breaking change.

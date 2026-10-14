@@ -25,7 +25,7 @@ final class Messages
     public const SCOPE = 'Action';
     public const CATEGORY = 'messages';
 
-    /** Keys after which the links to the Supertext signup and API key page follow. */
+    /** Keys after which the links to the Supertext signup and API key page follow (the key check texts carry them already). */
     private const KEY_HELP_AFTER = ['no_api_key', 'no_api_key_connection', 'enter_api_key', 'auth_failed'];
 
     /** @var array<string, string>|null */

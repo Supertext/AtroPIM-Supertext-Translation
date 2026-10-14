@@ -4,7 +4,10 @@
     "supertextEnvironment": "Environment",
     "supertextApiUrl": "API URL",
     "supertextTimeout": "Timeout (seconds)",
-    "supertextLanguageCodes": "Language codes"
+    "supertextLanguageCodes": "Language mapping",
+    "supertextVersionReports": "Send version information to Supertext",
+    "supertextKeyCheck": "API key check",
+    "supertextLanguageStatus": "Languages"
   },
   "options": {
     "type": {
@@ -22,6 +25,9 @@
     "supertextEnvironment": "Live for normal use. Staging and Testing are Supertext's test systems.",
     "supertextApiUrl": "Base URL of the Supertext API, e.g. https://api.supertext.com/v1/",
     "supertextTimeout": "How long to wait for one translation (30–1800 seconds).",
-    "supertextLanguageCodes": "Optional: one line per language whose Supertext code differs from the AtroPIM code, e.g. \"de_DE = de-CH\". By default de_CH becomes de-CH."
+    "supertextLanguageCodes": "One line per AtroPIM language and its Supertext code, e.g. \"de_DE = de-CH\" or \"es_ES = es\". Languages whose code already is a Supertext code apart from case and _/- (de_CH, fr_CH, it_IT, en_US) need no line; every other language must be mapped, or it isn't translated. Supertext codes: German, English, French, Italian and Portuguese with a region (de-CH, en-US, pt-BR), zh-Hans/zh-Hant, sr-Latn/sr-Cyrl, gsw-u-sd-chzh/gsw-u-sd-chbe, all other languages without a region (es, nl, sl, …). As source language, the same line is used without its region (de-CH → de).",
+    "supertextVersionReports": "Sends the site URL and the versions of this module, the PIM and the runtime to Supertext when you save these settings and after an update, so Supertext support can see which version you run. No content, no API key and no personal data are sent. SUPERTEXT_VERSION_REPORTS=0 on the server turns it off for the whole installation.",
+    "supertextKeyCheck": "The latest automatic check of the API key (when the connection is saved, on Test connection and when Supertext rejects the key), and whether version information is sent to Supertext.",
+    "supertextLanguageStatus": "The Supertext code each AtroPIM language is sent as. A language that is \"not mapped\" isn't translated until you add it to the language mapping."
   }
 }

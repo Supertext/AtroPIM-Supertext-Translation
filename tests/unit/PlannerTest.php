@@ -74,10 +74,4 @@ class PlannerTest extends TestCase
         self::assertFalse(Planner::hasText(" \n "));
         self::assertTrue(Planner::hasText('<p>x</p>'));
     }
-
-    public function testSupertextCode(): void
-    {
-        self::assertSame('de-CH', Planner::supertextCode('de_CH'));
-        self::assertSame('en-US', Planner::supertextCode('en'));
-    }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SupertextTranslation\Sdk;
+namespace SupertextTranslation\Sdk\V1;
 
 /**
  * Packs segments into the HTML document sent to Supertext and reads them back from the translation.

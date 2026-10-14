@@ -8,8 +8,9 @@ The record's multilingual texts go to Supertext in one request per language and 
 - Products, categories, brands or any other entity: an AtroCore **action** of the new type *Translate with Supertext* per entity, as a button, in the *More* menu and as a mass action, optionally in the background
 - Fields that already have text in a language are kept unless the action overwrites them
 - The API key lives in an AtroCore **connection** of type *Supertext* (encrypted, *Test connection*), or in `SUPERTEXT_API_KEY`
-- Source and target languages, form of address and Supertext language codes are configurable
-- Console commands `supertext translate` and `supertext check`; English and German interface
+- Source and target languages, form of address and the language mapping (AtroPIM language → Supertext code; the connection shows languages that still need one) are configurable
+- Checks the API key automatically and, unless switched off, sends version information (site URL, module, AtroPIM and PHP versions; no content, no key) to Supertext
+- Console commands `supertext translate` and `supertext check`; English, German, French and Italian interface
 
 ![A product translated into German, French and Italian with Translate with Supertext](docs/images/product-translated.png)
 

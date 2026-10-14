@@ -24,7 +24,7 @@
     "supertextSourceLanguage": "La langue à partir de laquelle traduire. Vide : la langue principale.",
     "supertextTargetLanguages": "Les langues vers lesquelles traduire. Vide : toutes les autres langues.",
     "supertextOverwrite": "Désactivé : les champs qui ont déjà un texte dans une langue cible sont conservés. Activé : ils sont remplacés par la nouvelle traduction.",
-    "supertextPoliteness": "Forme d'adresse formelle ou informelle, pour les langues qui distinguent les deux (p. ex. vous/tu en français)."
+    "supertextPoliteness": "Forme d'adresse formelle ou informelle, pour les langues qui distinguent les deux (p. ex. vous/tu en français). Supertext ne la propose pas pour toutes les langues (p. ex. pas pour l'anglais, le romanche ou l'albanais) : celles-ci sont traduites avec le ton par défaut, et le résultat le signale."
   },
   "messages": {
     "supertextKeyHelp": "Pas encore de compte Supertext ? Créez-en un sur https://www.supertext.com/person/en/account/signin. Générez votre clé API sur https://www.supertext.com/en/integrations/api (supertext.com → Integrations → API ; rôle Admin requis).",
@@ -61,6 +61,25 @@
     "supertextError": "erreur : {message}",
     "supertextNoTargets": "Aucune autre langue vers laquelle traduire.",
     "supertextRecordsTranslated": "Supertext a traduit {done} enregistrements sur {total}.",
-    "supertextRecordsFailed": "Le panneau Exécutions de l'action en indique la raison."
+    "supertextRecordsFailed": "Le panneau Exécutions de l'action en indique la raison.",
+    "supertextUnsupportedLanguage": "La langue {language} n'est encore associée à aucune langue Supertext. Demandez à votre administrateur de l'associer dans la correspondance des langues de la connexion Supertext (Administration → Connexions), p. ex. « de_DE = de-CH ».",
+    "supertextUnsupportedFeature": "Supertext ne propose pas de ton formel ou informel pour cette langue. Réglez la forme d'adresse de l'action sur « Par défaut ».",
+    "supertextPolitenessSkipped": "Supertext ne propose pas de ton formel ou informel pour {language} : traduit avec le ton par défaut.",
+    "supertextKeyCheckOk": "Clé API vérifiée : la connexion à Supertext fonctionne.",
+    "supertextKeyCheckInvalid": "Supertext a refusé la clé API. Vérifiez que vous avez copié la clé entière ou générez-en une nouvelle sur https://www.supertext.com/en/integrations/api (supertext.com → Integrations → API ; rôle Admin requis). Pas encore de compte Supertext ? Créez-en un sur https://www.supertext.com/person/en/account/signin.",
+    "supertextKeyCheckMissing": "Aucune clé API n'est encore saisie. Pas encore de compte Supertext ? Créez-en un sur https://www.supertext.com/person/en/account/signin. Générez votre clé API sur https://www.supertext.com/en/integrations/api (supertext.com → Integrations → API ; rôle Admin requis).",
+    "supertextKeyCheckUnreachable": "La clé API n'a pas pu être vérifiée, car Supertext n'est pas joignable. Les paramètres sont enregistrés ; réessayez plus tard.",
+    "supertextKeyCheckError": "La clé API n'a pas pu être vérifiée : Supertext a répondu par une erreur ({status}). Les paramètres sont enregistrés ; réessayez plus tard.",
+    "supertextKeyCheckTime": "Vérifiée le {time} UTC.",
+    "supertextKeyCheckNone": "Pas encore vérifiée : enregistrez la connexion ou cliquez sur « Tester la connexion ».",
+    "supertextReportsOn": "Les informations de version sont envoyées à Supertext. URL de ping pour le Supertext Commando Center : {url}",
+    "supertextReportsOff": "Aucune information de version n'est envoyée à Supertext.",
+    "supertextReportsOffEnvironment": "Aucune information de version n'est envoyée à Supertext : SUPERTEXT_VERSION_REPORTS=0 est défini sur le serveur et prime sur ce paramètre.",
+    "supertextLanguageMapped": "{language} → {code}",
+    "supertextLanguageNotMapped": "{language} : non associée. Ajoutez une ligne « {language} = … » avec son code Supertext à la correspondance des langues ; d'ici là, elle n'est pas traduite.",
+    "supertextLanguageNoPoliteness": "(pas de ton formel/informel)",
+    "supertextLanguageUnlisted": "(absent de la liste Supertext d'octobre 2026 : envoyé tel que saisi)",
+    "supertextLanguageSource": "· comme langue source : {code}",
+    "supertextLanguageSourceNotMapped": "· comme langue source : non associée"
   }
 }

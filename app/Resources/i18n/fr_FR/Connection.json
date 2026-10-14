@@ -4,7 +4,10 @@
     "supertextEnvironment": "Environnement",
     "supertextApiUrl": "URL de l'API",
     "supertextTimeout": "Délai d'attente (secondes)",
-    "supertextLanguageCodes": "Codes de langue"
+    "supertextLanguageCodes": "Correspondance des langues",
+    "supertextVersionReports": "Envoyer les informations de version à Supertext",
+    "supertextKeyCheck": "Vérification de la clé API",
+    "supertextLanguageStatus": "Langues"
   },
   "options": {
     "type": {
@@ -22,6 +25,9 @@
     "supertextEnvironment": "Live pour l'utilisation normale. Staging et Testing sont les systèmes de test de Supertext.",
     "supertextApiUrl": "URL de base de l'API Supertext, p. ex. https://api.supertext.com/v1/",
     "supertextTimeout": "Durée d'attente maximale pour une traduction (30 à 1800 secondes).",
-    "supertextLanguageCodes": "Facultatif : une ligne par langue dont le code Supertext diffère du code AtroPIM, p. ex. « de_DE = de-CH ». Par défaut, de_CH devient de-CH."
+    "supertextLanguageCodes": "Une ligne par langue AtroPIM avec son code Supertext, p. ex. « de_DE = de-CH » ou « es_ES = es ». Les langues dont le code est déjà un code Supertext, aux majuscules et à _/- près (de_CH, fr_CH, it_IT, en_US), n'ont pas besoin de ligne ; toute autre langue doit être associée, sinon elle n'est pas traduite. Codes Supertext : allemand, anglais, français, italien et portugais avec une région (de-CH, en-US, pt-BR), zh-Hans/zh-Hant, sr-Latn/sr-Cyrl, gsw-u-sd-chzh/gsw-u-sd-chbe, toutes les autres langues sans région (es, nl, sl, …). Comme langue source, la même ligne est utilisée sans sa région (de-CH → de).",
+    "supertextVersionReports": "Envoie à Supertext l'URL du site ainsi que les versions de ce module, du PIM et de l'environnement d'exécution lorsque vous enregistrez ces paramètres et après une mise à jour. Le support Supertext voit ainsi quelle version vous utilisez. Aucun contenu, aucune clé API et aucune donnée personnelle ne sont transmis. SUPERTEXT_VERSION_REPORTS=0 sur le serveur le désactive pour toute l'installation.",
+    "supertextKeyCheck": "La dernière vérification automatique de la clé API (à l'enregistrement de la connexion, avec « Tester la connexion » et lorsque Supertext refuse la clé) et si les informations de version sont envoyées à Supertext.",
+    "supertextLanguageStatus": "Le code Supertext sous lequel chaque langue AtroPIM est envoyée. Une langue « non associée » n'est traduite qu'une fois ajoutée à la correspondance des langues."
   }
 }

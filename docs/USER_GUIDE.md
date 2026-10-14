@@ -54,6 +54,7 @@ To translate a changed text again, empty that field in the target language (**Ed
 
 - Each text is translated as a whole, so sentences stay intact.
 - A target language that already has text in a field is kept unless the action overwrites.
+- Formal or informal address (*Sie*/*du*, *vous*/*tu*, *Lei*/*tu*) is used where the action asks for it and Supertext offers it; English, for example, has none, and the message says so.
 - Single-line fields have a maximum length; a translation that is longer is not saved (the message names the field) and the other fields are.
 
 ## Messages
@@ -66,7 +67,10 @@ To translate a changed text again, empty that field in the target language (**Ed
 | `Supertext translated 3 of 4 records.` | Several products: one failed; the action's **Executions** panel (administrators) shows why. |
 | `The translation is longer than the field allows: Name` | The Name translation was too long and not saved; the other fields were. |
 | `No Supertext API key is configured …` / `Authentication failed …` | The Supertext connection isn't set up yet. Ask your administrator. |
+| `The language es_ES has no Supertext language yet. Ask your administrator to map it …` | Your administrator hasn't told AtroPIM which Supertext language this is (the connection's *Language mapping*). Nothing was sent to Supertext. Ask your administrator. |
 | `Supertext does not support this language pair (en → …)` | Supertext can't translate into this language, or the connection's language code for it is wrong. Tell your administrator. |
+| `… translated (4 fields). Supertext offers no formal or informal tone for en_US: translated with the default tone.` | Done; the action asks for a formal or informal form of address, but Supertext offers none for this language (e.g. English), so it was translated with the default tone. |
+| `Supertext offers no formal or informal tone for this language …` | Supertext refused the form of address the action asks for. Ask your administrator to set the action's form of address to *Default*. |
 | `Too many requests to Supertext` / `Timed out …` | Supertext was busy or the text was long. Try again in a moment. |
 | `… has no multilingual text fields` | This kind of record has nothing to translate. Ask your administrator. |
 | `Translate with Supertext is finished. To view the result, click here` | AtroPIM's notification when the action has run; the link opens the run's details. |

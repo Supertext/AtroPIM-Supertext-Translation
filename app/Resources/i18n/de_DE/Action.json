@@ -24,7 +24,7 @@
     "supertextSourceLanguage": "Die Sprache, aus der übersetzt wird. Leer: die Hauptsprache.",
     "supertextTargetLanguages": "Die Sprachen, in die übersetzt wird. Leer: alle anderen Sprachen.",
     "supertextOverwrite": "Aus: Felder, die in einer Zielsprache schon Text haben, bleiben unverändert. Ein: Sie werden durch die neue Übersetzung ersetzt.",
-    "supertextPoliteness": "Formelle oder informelle Anrede, für Sprachen, die beides kennen (z. B. Sie/du)."
+    "supertextPoliteness": "Formelle oder informelle Anrede, für Sprachen, die beides kennen (z. B. Sie/du). Supertext bietet sie nicht für jede Sprache an (z. B. nicht für Englisch, Rätoromanisch oder Albanisch): Diese werden mit der Standard-Anrede übersetzt, und das Ergebnis weist darauf hin."
   },
   "messages": {
     "supertextKeyHelp": "Noch kein Supertext-Konto? Erstellen Sie eines unter https://www.supertext.com/person/en/account/signin. Den API-Schlüssel erzeugen Sie unter https://www.supertext.com/en/integrations/api (supertext.com → Integrations → API; erfordert die Admin-Rolle).",
@@ -61,6 +61,25 @@
     "supertextError": "Fehler: {message}",
     "supertextNoTargets": "Keine anderen Sprachen zum Übersetzen.",
     "supertextRecordsTranslated": "Supertext hat {done} von {total} Datensätzen übersetzt.",
-    "supertextRecordsFailed": "Den Grund zeigt das Panel Läufe der Aktion."
+    "supertextRecordsFailed": "Den Grund zeigt das Panel Läufe der Aktion.",
+    "supertextUnsupportedLanguage": "Die Sprache {language} ist noch keiner Supertext-Sprache zugeordnet. Bitten Sie Ihre Administratorin oder Ihren Administrator, sie in der Sprachzuordnung der Supertext-Verbindung zuzuordnen (Verwaltung → Verbindungen), z. B. \"de_DE = de-CH\".",
+    "supertextUnsupportedFeature": "Supertext bietet für diese Sprache keine formelle oder informelle Anrede an. Stellen Sie die Anrede der Aktion auf «Standard».",
+    "supertextPolitenessSkipped": "Supertext bietet für {language} keine formelle oder informelle Anrede an: mit der Standard-Anrede übersetzt.",
+    "supertextKeyCheckOk": "API-Schlüssel geprüft: Die Verbindung zu Supertext funktioniert.",
+    "supertextKeyCheckInvalid": "Supertext hat den API-Schlüssel abgelehnt. Prüfen Sie, ob Sie den ganzen Schlüssel kopiert haben, oder erstellen Sie einen neuen unter https://www.supertext.com/en/integrations/api (supertext.com → Integrations → API; erfordert die Rolle Admin). Noch kein Supertext-Konto? Erstellen Sie eines auf https://www.supertext.com/person/en/account/signin.",
+    "supertextKeyCheckMissing": "Es ist noch kein API-Schlüssel eingetragen. Noch kein Supertext-Konto? Erstellen Sie eines auf https://www.supertext.com/person/en/account/signin. Ihren API-Schlüssel erstellen Sie unter https://www.supertext.com/en/integrations/api (supertext.com → Integrations → API; erfordert die Rolle Admin).",
+    "supertextKeyCheckUnreachable": "Der API-Schlüssel konnte nicht geprüft werden, weil Supertext nicht erreichbar ist. Die Einstellungen sind gespeichert; prüfen Sie ihn später erneut.",
+    "supertextKeyCheckError": "Der API-Schlüssel konnte nicht geprüft werden: Supertext hat mit einem Fehler geantwortet ({status}). Die Einstellungen sind gespeichert; prüfen Sie ihn später erneut.",
+    "supertextKeyCheckTime": "Geprüft am {time} UTC.",
+    "supertextKeyCheckNone": "Noch nicht geprüft: Speichern Sie die Verbindung oder klicken Sie auf «Verbindung testen».",
+    "supertextReportsOn": "Versionsinformationen werden an Supertext gesendet. Ping-URL für das Supertext Commando Center: {url}",
+    "supertextReportsOff": "Es werden keine Versionsinformationen an Supertext gesendet.",
+    "supertextReportsOffEnvironment": "Es werden keine Versionsinformationen an Supertext gesendet: Auf dem Server ist SUPERTEXT_VERSION_REPORTS=0 gesetzt, das diese Einstellung übersteuert.",
+    "supertextLanguageMapped": "{language} → {code}",
+    "supertextLanguageNotMapped": "{language}: nicht zugeordnet. Ergänzen Sie in der Sprachzuordnung eine Zeile \"{language} = …\" mit dem Supertext-Code; bis dahin wird sie nicht übersetzt.",
+    "supertextLanguageNoPoliteness": "(keine formelle/informelle Anrede)",
+    "supertextLanguageUnlisted": "(nicht in der Supertext-Liste vom Oktober 2026: wird wie eingetragen gesendet)",
+    "supertextLanguageSource": "· als Ausgangssprache: {code}",
+    "supertextLanguageSourceNotMapped": "· als Ausgangssprache: nicht zugeordnet"
   }
 }

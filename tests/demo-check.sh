@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # CI: starts the demo image twice against MySQL with the stand-in API, checks the demo accounts
-# (created once, never duplicated, passwords never logged) and translates the sample products.
+# (created once, never duplicated, passwords never logged), translates the sample products and
+# checks the Commando Center parts: the ping endpoint and the reports (sent to the stand-in, never
+# to the live center: SUPERTEXT_REPORT_URL).
 # Needs: docker image supertext-atropim-demo, MySQL at $MYSQL_URL (mysql client on the host, or
 # MYSQL_CMD), the stand-in on 127.0.0.1:8765.
 set -euo pipefail
@@ -17,7 +19,7 @@ start() {
 	docker rm -f demo >/dev/null 2>&1 || true
 	docker run -d --name demo --network host -e PORT=$PORT -e MYSQL_URL="$MYSQL_URL" -e ATROPIM_DB_NAME=$DB \
 		-e DEMO_SITE_URL=http://127.0.0.1:$PORT -e DEMO_ADMIN_EMAIL -e DEMO_ADMIN_PASSWORD -e DEMO_EDITOR_EMAIL -e DEMO_EDITOR_PASSWORD \
-		-e SUPERTEXT_API_KEY=anything -e SUPERTEXT_API_URL=http://127.0.0.1:8765/v1/ -v atropim-ci-data:/data supertext-atropim-demo >/dev/null
+		-e SUPERTEXT_API_KEY=anything -e SUPERTEXT_API_URL=http://127.0.0.1:8765/v1/ -e SUPERTEXT_REPORT_URL=http://127.0.0.1:8765/report -v atropim-ci-data:/data supertext-atropim-demo >/dev/null
 	for _ in $(seq 200); do curl -sf -o /dev/null http://127.0.0.1:$PORT/ && break; sleep 3; done
 	curl -sf -o /dev/null http://127.0.0.1:$PORT/
 	docker logs demo 2>&1 | grep '\[demo\]' || true
@@ -36,7 +38,29 @@ test "$(sql "select r.name from user u join role_user ru on ru.user_id = u.id jo
 test "$(sql "select count(*) from product where number in ('praline-box-16', 'dark-chocolate-72') and deleted = 0")" = 2
 test "$(sql "select count(*) from action where type = 'supertextTranslate' and deleted = 0")" = 1
 
-console supertext check
+check=$(console supertext check)
+echo "$check"
+grep -qF 'Version reports: on (ping URL http://127.0.0.1:'"$PORT"'/api/supertext/ping), report sent' <<< "$check"
+grep -qF 'de_CH → de-CH' <<< "$check"
+reports=$(curl -sf http://127.0.0.1:8765/reports)
+python3 - "$PORT" "$reports" <<'PY'
+import json, sys
+reports = json.loads(sys.argv[2])
+events = [r['event'] for r in reports]
+assert 'installed' in events and events[-1] == 'check', events
+r = reports[-1]
+assert r['plugin']['name'] == 'AtroPIM-Supertext-Translation', r
+assert r['system']['name'] == 'AtroPIM' and r['system'].get('version'), r
+assert r['site_url'] == 'http://127.0.0.1:' + sys.argv[1], r
+assert r['callback']['url'] == r['site_url'] + '/api/supertext/ping', r
+assert r['api_key_check']['status'] == 'ok' and r['api_key_configured'] is True, r
+assert 'anything' not in json.dumps(reports), 'the API key must never be reported'
+PY
+
+# The public ping endpoint (no login): the challenge echoed, nothing else.
+test "$(curl -s "http://127.0.0.1:$PORT/api/supertext/ping?challenge=ci-challenge-0123456789")" = '{"ok":true,"plugin":"AtroPIM-Supertext-Translation","challenge":"ci-challenge-0123456789"}'
+test "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/api/supertext/ping?challenge=short")" = 400
+grep -qi '^cache-control: no-store' <<< "$(curl -s -D - -o /dev/null "http://127.0.0.1:$PORT/api/supertext/ping?challenge=ci-challenge-0123456789")"
 praline=$(sql "select id from product where number = 'praline-box-16'")
 out=$(console supertext translate Product "$praline")
 echo "$out"

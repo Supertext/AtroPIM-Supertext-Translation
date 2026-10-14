@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
  * Regenerates docs/images from a freshly set-up demo (no translations yet) whose module talks
- * to stand-in.mjs (SUPERTEXT_API_URL=http://127.0.0.1:8765/v1/). See docs/DEVELOPER.md →
- * Docs screenshots.
+ * to stand-in.mjs (SUPERTEXT_API_URL=http://127.0.0.1:8765/v1/) and reports to it too
+ * (SUPERTEXT_REPORT_URL=http://127.0.0.1:8765/report: never the live Commando Center). See
+ * docs/DEVELOPER.md → Docs screenshots.
  *
  *   BASE_URL (default http://127.0.0.1:8095)
  *   DEMO_ADMIN_EMAIL / DEMO_ADMIN_PASSWORD     action, connection, languages (administrator)
@@ -123,7 +124,7 @@ await shot(admin, await around(admin, ['.header-breadcrumbs', '.cell[data-name=s
 
 const connection = await idOf(admin, 'Connection', 'type', 'supertext')
 await go(admin, `Connection/view/${connection}`, '.cell[data-name=supertextApiKey]')
-await shot(admin, await around(admin, ['.header-breadcrumbs', '.cell[data-name=supertextLanguageCodes]']), 'connection-settings.png')
+await shot(admin, await around(admin, ['.header-breadcrumbs', '.cell[data-name=supertextLanguageStatus]']), 'connection-settings.png')
 
 await go(admin, 'Language', '.list table.full-table')
 const table = await admin.locator('.list table.full-table').first().boundingBox()

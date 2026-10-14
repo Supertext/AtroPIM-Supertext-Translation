@@ -20,6 +20,9 @@ class ConnectionLayout extends AbstractLayoutListener
         [['name' => 'supertextApiKey'], ['name' => 'supertextEnvironment']],
         [['name' => 'supertextApiUrl'], ['name' => 'supertextTimeout']],
         [['name' => 'supertextLanguageCodes', 'fullWidth' => true]],
+        [['name' => 'supertextVersionReports'], false],
+        [['name' => 'supertextKeyCheck', 'fullWidth' => true]],
+        [['name' => 'supertextLanguageStatus', 'fullWidth' => true]],
     ];
 
     public function detail(Event $event): void

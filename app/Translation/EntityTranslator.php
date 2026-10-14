@@ -15,6 +15,7 @@ use Atro\Core\Exceptions\NotModified;
 use Espo\ORM\Entity;
 use SupertextTranslation\Api\SupertextClient;
 use SupertextTranslation\Api\SupertextException;
+use SupertextTranslation\Sdk\V1\Languages;
 
 /**
  * Translates the multilingual text fields of one record (a product, a category, …) from a
@@ -90,11 +91,17 @@ final class EntityTranslator
         $settings ??= (new ConnectionResolver($this->container))->settings(null);
         $client   = $settings->client();
 
+        // Version report / key check of the Commando Center, at the end of the process (never fails this).
+        ReportingFactory::afterTranslation($this->container, $settings);
+
         if (!$client->hasApiKey()) {
             throw new SupertextException('No Supertext API key is configured. Create a connection of type "Supertext" under Administration → Connections. ' . Settings::KEY_HELP, key: 'no_api_key_connection');
         }
 
-        $results = [];
+        // No guessing: a language without a Supertext code fails with unsupported_language, nothing is sent.
+        $sourceCode = $settings->sourceCode($source);
+        $politeness = \in_array($politeness, ['more', 'less'], true) ? $politeness : 'default';
+        $results    = [];
 
         foreach ($targets as $target) {
             $values = $this->values($entity, $units);
@@ -106,9 +113,24 @@ final class EntityTranslator
                 continue;
             }
 
+            $notes = [];
+
             try {
-                $translations = $this->translateUnits($client, $settings, $plan['translate'], $values, $source, $target, $politeness);
+                $targetCode = $settings->languageCode($target);
+                $tone       = $politeness;
+
+                // Formal/informal only where Supertext offers it (not e.g. en-US); say so instead of failing.
+                if ($tone !== 'default' && Languages::supportsPoliteness($targetCode) === false) {
+                    $tone    = 'default';
+                    $notes[] = $this->messages->text('politeness_skipped', ['language' => $target]);
+                }
+
+                $translations = $this->translateUnits($client, $plan['translate'], $values, $source, $sourceCode, $targetCode, $tone);
             } catch (SupertextException $e) {
+                if (\in_array($e->getCode(), [401, 403], true)) {
+                    ReportingFactory::markAuthenticationFailed($e->getCode());
+                }
+
                 $results[$target] = ['status' => 'error', 'translated' => 0, 'existing' => $plan['existing'], 'message' => $this->messages->exception($e)];
 
                 continue;
@@ -155,12 +177,16 @@ final class EntityTranslator
                 continue;
             }
 
+            if ($tooLong !== []) {
+                array_unshift($notes, $this->messages->text('partly_too_long', ['fields' => implode(', ', $tooLong)]));
+            }
+
             $entity = $service->getEntity($id) ?? $entity;
             $results[$target] = [
                 'status'     => 'translated',
                 'translated' => \count((array) $data),
                 'existing'   => $plan['existing'],
-                'message'    => $tooLong !== [] ? $this->messages->text('partly_too_long', ['fields' => implode(', ', $tooLong)]) : '',
+                'message'    => implode(' ', $notes),
             ];
         }
 
@@ -255,7 +281,7 @@ final class EntityTranslator
      *
      * @return array<int, string> unit index => translated text
      */
-    private function translateUnits(SupertextClient $client, Settings $settings, array $units, array $values, string $source, string $target, string $politeness): array
+    private function translateUnits(SupertextClient $client, array $units, array $values, string $source, string $sourceCode, string $targetCode, string $politeness): array
     {
         $segments = [];
 
@@ -263,11 +289,6 @@ final class EntityTranslator
             $segments[$index] = ['text' => (string) $values[$unit->fieldFor($source)], 'html' => $unit->html];
         }
 
-        return $client->translateSegments(
-            $segments,
-            $settings->languageCode($target),
-            $settings->sourceCode($source),
-            \in_array($politeness, ['more', 'less'], true) ? $politeness : 'default',
-        );
+        return $client->translateSegments($segments, $targetCode, $sourceCode, $politeness);
     }
 }

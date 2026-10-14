@@ -24,7 +24,7 @@
     "supertextSourceLanguage": "The language to translate from. Empty: the main language.",
     "supertextTargetLanguages": "The languages to translate into. Empty: every other language.",
     "supertextOverwrite": "Off: fields that already have text in a target language are kept. On: they are replaced by the new translation.",
-    "supertextPoliteness": "Formal or informal form of address, for languages that have both (e.g. Sie/du in German)."
+    "supertextPoliteness": "Formal or informal form of address, for languages that have both (e.g. Sie/du in German). Supertext doesn't offer it for every language (not e.g. for English, Romansh or Albanian): those are translated with the default tone, and the result says so."
   },
   "messages": {
     "supertextKeyHelp": "No Supertext account yet? Create one at https://www.supertext.com/person/en/account/signin. Generate your API key at https://www.supertext.com/en/integrations/api (supertext.com → Integrations → API; requires the Admin role).",
@@ -61,6 +61,25 @@
     "supertextError": "error: {message}",
     "supertextNoTargets": "No other languages to translate into.",
     "supertextRecordsTranslated": "Supertext translated {done} of {total} records.",
-    "supertextRecordsFailed": "The Executions panel of the action shows why."
+    "supertextRecordsFailed": "The Executions panel of the action shows why.",
+    "supertextUnsupportedLanguage": "The language {language} has no Supertext language yet. Ask your administrator to map it in the language mapping of the Supertext connection (Administration → Connections), e.g. \"de_DE = de-CH\".",
+    "supertextUnsupportedFeature": "Supertext offers no formal or informal tone for this language. Set the action's form of address to Default.",
+    "supertextPolitenessSkipped": "Supertext offers no formal or informal tone for {language}: translated with the default tone.",
+    "supertextKeyCheckOk": "API key checked: the connection to Supertext works.",
+    "supertextKeyCheckInvalid": "Supertext rejected the API key. Check that you copied the whole key, or generate a new one at https://www.supertext.com/en/integrations/api (supertext.com → Integrations → API; requires the Admin role). No Supertext account yet? Create one at https://www.supertext.com/person/en/account/signin.",
+    "supertextKeyCheckMissing": "No API key is set yet. No Supertext account yet? Create one at https://www.supertext.com/person/en/account/signin. Generate your API key at https://www.supertext.com/en/integrations/api (supertext.com → Integrations → API; requires the Admin role).",
+    "supertextKeyCheckUnreachable": "The API key couldn't be checked because Supertext can't be reached. The settings are saved; check again later.",
+    "supertextKeyCheckError": "The API key couldn't be checked: Supertext answered with an error ({status}). The settings are saved; check again later.",
+    "supertextKeyCheckTime": "Checked {time} UTC.",
+    "supertextKeyCheckNone": "Not checked yet: save the connection or click Test connection.",
+    "supertextReportsOn": "Version information is sent to Supertext. Ping URL for the Supertext Commando Center: {url}",
+    "supertextReportsOff": "Version information is not sent to Supertext.",
+    "supertextReportsOffEnvironment": "Version information is not sent to Supertext: SUPERTEXT_VERSION_REPORTS=0 is set on the server and overrides this setting.",
+    "supertextLanguageMapped": "{language} → {code}",
+    "supertextLanguageNotMapped": "{language}: not mapped. Add a line \"{language} = …\" with its Supertext code to the language mapping; until then it isn't translated.",
+    "supertextLanguageNoPoliteness": "(no formal/informal tone)",
+    "supertextLanguageUnlisted": "(not in Supertext's list of October 2026: sent as entered)",
+    "supertextLanguageSource": "· as source language: {code}",
+    "supertextLanguageSourceNotMapped": "· as source language: not mapped"
   }
 }

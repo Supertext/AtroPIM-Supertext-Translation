@@ -15,14 +15,19 @@ use Atro\ConnectionType\ConnectionInterface;
 use Atro\ConnectionType\TestConnectionInterface;
 use Atro\Core\Exceptions\BadRequest;
 use Espo\ORM\Entity;
-use SupertextTranslation\Api\SupertextException;
+use SupertextTranslation\Sdk\V1\ApiKeyCheck;
 use SupertextTranslation\Translation\ConnectionResolver;
+use SupertextTranslation\Translation\ConnectionStatus;
 use SupertextTranslation\Translation\Messages;
+use SupertextTranslation\Translation\Reporting;
+use SupertextTranslation\Translation\ReportingFactory;
 use SupertextTranslation\Translation\Settings;
 
 /**
  * Connection type "Supertext" (Administration → Connections): holds the API key (encrypted by
- * AtroCore like every password field) and the API settings. "Test connection" checks the key.
+ * AtroCore like every password field) and the API settings. "Test connection" runs the automatic
+ * API key check (cost-free GET features), stores its result for the connection page and reports a
+ * changed result to the Supertext Commando Center (see Translation\Reporting).
  */
 class ConnectionSupertext extends AbstractConnection implements ConnectionInterface, TestConnectionInterface
 {
@@ -33,17 +38,15 @@ class ConnectionSupertext extends AbstractConnection implements ConnectionInterf
 
     public function testConnection(Entity $connectionEntity): bool
     {
-        $settings = $this->connect($connectionEntity);
-        $messages = Messages::forUser($this->container);
+        $settings  = $this->connect($connectionEntity);
+        $messages  = Messages::forUser($this->container);
+        $reporting = ReportingFactory::create($this->container, $settings);
+        $check     = $reporting->testConnection($settings->apiKey());
 
-        if ($settings->apiKey() === '') {
-            throw new BadRequest($messages->text('enter_api_key') . ' ' . $messages->text('key_help'));
-        }
+        ConnectionStatus::store($this->container, $connectionEntity, $settings, $reporting);
 
-        try {
-            $settings->client()->validateApiKey();
-        } catch (SupertextException $e) {
-            throw new BadRequest($messages->exception($e));
+        if ($check === null || $check->status !== ApiKeyCheck::OK) {
+            throw new BadRequest(Reporting::checkText($check, $messages));
         }
 
         return true;
