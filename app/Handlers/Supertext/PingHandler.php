@@ -21,7 +21,7 @@ use SupertextTranslation\Translation\Reporting;
 
 /**
  * The public ping endpoint of the Supertext Commando Center: GET /api/supertext/ping?challenge=<c>,
- * no login, no session. Answers exactly what the SDK builds (InstallationReporter::pingResponse):
+ * no login, no session. Answers exactly what Supertext Plugin Health builds (InstallationReporter::pingResponse):
  * 200 {"ok":true,"plugin":"AtroPIM-Supertext-Translation","challenge":"<c>"}, 400 for a bad
  * challenge, 404 while version reports are off. Nothing else: no versions, no settings.
  */
