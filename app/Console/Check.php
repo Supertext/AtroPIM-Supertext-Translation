@@ -11,7 +11,7 @@ declare(strict_types=1);
 namespace SupertextTranslation\Console;
 
 use Atro\Console\AbstractConsole;
-use SupertextTranslation\Sdk\V1\ApiKeyCheck;
+use SupertextTranslation\PluginHealth\KeyCheck;
 use SupertextTranslation\Translation\ConnectionResolver;
 use SupertextTranslation\Translation\ConnectionStatus;
 use SupertextTranslation\Translation\EntityTranslator;
@@ -74,7 +74,7 @@ class Check extends AbstractConsole
             ? 'Version reports: off (SUPERTEXT_VERSION_REPORTS)'
             : ($reporting->isEnabled() ? 'Version reports: on (ping URL ' . $reporting->pingUrl() . ')' . ($result !== null && $result->event !== null ? ', report ' . ($result->sent ? 'sent' : 'not sent') : '') : 'Version reports: off'));
 
-        if ($check === null || $check->status !== ApiKeyCheck::OK) {
+        if ($check === null || $check->status !== KeyCheck::OK) {
             self::show('API key check: ' . Reporting::checkText($check, $messages), self::ERROR, true);
         }
 

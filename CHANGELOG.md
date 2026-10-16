@@ -6,7 +6,8 @@ All notable changes to Supertext Translation for AtroPIM.
 
 ### Changed
 - **Language codes: no guessing.** Supertext accepts only its own codes: German, English, French, Italian and Portuguese with a region (`de-CH`, `en-US`, `pt-BR`), `zh-Hans`/`zh-Hant`, `sr-Latn`/`sr-Cyrl`, Swiss German dialects, and every other language **without** a region (`es`, `nl`, `sl`, …). The module no longer adds default regions (`es-ES`, `sl-SI`, `zh-CN` were rejected by Supertext). A language is sent with the code in the connection's **Language mapping** (formerly *Language codes*, same field), else with the Supertext code it equals apart from case and `_`/`-` (`de_CH` → `de-CH`); any other language fails with "The language … has no Supertext language yet" and nothing is sent. Sites with languages such as `es_ES`, `nl_NL`, `zh_CN` or a bare `de` need a line in the mapping (`es_ES = es`).
-- The bundled Supertext SDK is now version 0.2.1 (its `V1` namespace and the API's language list).
+- The bundled Supertext SDK is now version 0.3.0 (its `V1` namespace and the API's language list).
+- Version reports, the API key check result and the reachability ping now use Supertext Plugin Health 0.1.0 (bundled in `lib/supertext-plugin-health/`); Supertext SDK updated to 0.3.0. No change for sites: settings and stored state stay as they are.
 
 ### Added
 - Support for PHP 8.5 (AtroCore 2.4.7 runs on PHP 8.4 and 8.5); lint and unit tests run on both.

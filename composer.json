@@ -22,7 +22,8 @@
   "autoload": {
     "psr-4": {
       "SupertextTranslation\\": "app/",
-      "SupertextTranslation\\Sdk\\": "lib/supertext-sdk/src/"
+      "SupertextTranslation\\Sdk\\": "lib/supertext-sdk/src/",
+      "SupertextTranslation\\PluginHealth\\": "lib/supertext-plugin-health/src/"
     }
   },
   "autoload-dev": {

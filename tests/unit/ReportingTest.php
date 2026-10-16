@@ -6,8 +6,8 @@ namespace SupertextTranslation\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use SupertextTranslation\Api\CallableTransport;
+use SupertextTranslation\PluginHealth\KeyCheck;
 use SupertextTranslation\Sdk\Supertext;
-use SupertextTranslation\Sdk\V1\ApiKeyCheck;
 use SupertextTranslation\Translation\Messages;
 use SupertextTranslation\Translation\Reporting;
 
@@ -18,7 +18,7 @@ final class ReportingTest extends TestCase
     private const API = 'https://api.test/v1/';
     private const CENTER = 'https://center.test/api/v1/report';
 
-    /** @var list<array{method: string, url: string, body: ?string}> */
+    /** @var list<array{method: string, url: string, body: ?string, agent: string}> */
     private array $calls = [];
 
     private ?string $stored = null;
@@ -39,7 +39,7 @@ final class ReportingTest extends TestCase
     private function reporting(?bool $setting = null, string $pluginVersion = '1.2.0', string $systemVersion = '1.16.10', bool $failingStore = false): Reporting
     {
         $transport = new CallableTransport(function (string $method, string $url, array $headers, ?string $body): array {
-            $this->calls[] = ['method' => $method, 'url' => $url, 'body' => $body];
+            $this->calls[] = ['method' => $method, 'url' => $url, 'body' => $body, 'agent' => $headers['User-Agent'] ?? ''];
             self::assertStringNotContainsString('secret-key', (string) $body, 'the API key is never sent to the center');
 
             return str_starts_with($url, self::CENTER)
@@ -95,7 +95,7 @@ final class ReportingTest extends TestCase
         $check = $this->reporting()->afterSettingsSaved('secret-key');
 
         self::assertNotNull($check);
-        self::assertSame(ApiKeyCheck::OK, $check->status);
+        self::assertSame(KeyCheck::OK, $check->status);
         self::assertSame(1, $this->keyChecks());
 
         $report = $this->reports()[0];
@@ -115,6 +115,34 @@ final class ReportingTest extends TestCase
         $state = json_decode((string) $this->stored, true);
         self::assertIsArray($state);
         self::assertStringNotContainsString('secret-key', (string) $this->stored, 'only a fingerprint is stored');
+    }
+
+    public function testTheKeyCheckIsTheSdkClientsAgainstTheConnectionsApi(): void
+    {
+        $this->reporting(false)->afterSettingsSaved('secret-key');
+
+        self::assertCount(1, $this->calls);
+        self::assertSame(['GET', self::API . 'features'], [$this->calls[0]['method'], $this->calls[0]['url']]);
+        self::assertStringContainsString('AtroPIM-Supertext-Translation/1.2.0', $this->calls[0]['agent']);
+    }
+
+    public function testStateStoredByTheSdk02ReporterIsKept(): void
+    {
+        // What the Supertext SDK 0.2 reporter stored before the switch to Plugin Health.
+        $this->stored = '{"reportedVersions":"1.2.0|1.16.10|' . PHP_VERSION . '","reportedKeyStatus":"ok","lastFailureAt":null,'
+            . '"keyCheck":{"status":"ok","checkedAt":"2026-10-13T08:00:00Z","httpStatus":200,"errorCode":null,"fingerprint":"' . hash('sha256', 'secret-key') . '"}}';
+
+        self::assertSame('2026-10-13T08:00:00Z', $this->reporting()->latestCheck()?->checkedAt);
+        self::assertNull($this->reporting()->onRequest('secret-key')?->event, 'no new installed report after the update');
+        self::assertSame([], $this->calls);
+
+        $this->reporting()->afterSettingsSaved('secret-key');
+        self::assertSame('settings_saved', $this->reports()[0]['event']);
+        self::assertSame(
+            ['reportedVersions', 'reportedKeyStatus', 'lastFailureAt', 'keyCheck'],
+            array_keys(json_decode((string) $this->stored, true)),
+            'same stored format',
+        );
     }
 
     public function testOnRequestReportsOnlyChanges(): void
@@ -147,7 +175,7 @@ final class ReportingTest extends TestCase
         self::assertSame(0, $this->keyChecks());
         self::assertSame('api_key_check', $result?->event);
         self::assertSame(['status' => 'invalid', 'checked_at' => '2026-10-14T08:00:00Z', 'http_status' => 403], $this->reports()[0]['api_key_check']);
-        self::assertSame(ApiKeyCheck::INVALID, $this->reporting()->latestCheck()?->status);
+        self::assertSame(KeyCheck::INVALID, $this->reporting()->latestCheck()?->status);
 
         $this->calls = [];
         $this->reporting()->authenticationFailed('secret-key', 401);
@@ -158,13 +186,13 @@ final class ReportingTest extends TestCase
     {
         $this->keyStatus = 401;
         $check           = $this->reporting()->testConnection('secret-key');
-        self::assertSame(ApiKeyCheck::INVALID, $check?->status);
+        self::assertSame(KeyCheck::INVALID, $check?->status);
         self::assertSame('installed', $this->reports()[0]['event']);
 
         $this->calls     = [];
         $this->keyStatus = 200;
         $result          = $this->reporting()->check('secret-key');
-        self::assertSame(ApiKeyCheck::OK, $result?->check?->status);
+        self::assertSame(KeyCheck::OK, $result?->check?->status);
         self::assertSame(['api_key_check', 'check'], array_column($this->reports(), 'event'));
     }
 
@@ -172,7 +200,7 @@ final class ReportingTest extends TestCase
     {
         $check = $this->reporting()->afterSettingsSaved('');
 
-        self::assertSame(ApiKeyCheck::MISSING, $check?->status);
+        self::assertSame(KeyCheck::MISSING, $check?->status);
         self::assertSame(0, $this->keyChecks());
         self::assertFalse($this->reports()[0]['api_key_configured']);
     }
@@ -181,7 +209,7 @@ final class ReportingTest extends TestCase
     {
         $check = $this->reporting(false)->afterSettingsSaved('secret-key');
 
-        self::assertSame(ApiKeyCheck::OK, $check?->status, 'the key check runs whether or not reports are on');
+        self::assertSame(KeyCheck::OK, $check?->status, 'the key check runs whether or not reports are on');
         self::assertSame([], $this->reports());
 
         putenv('SUPERTEXT_VERSION_REPORTS=0');
@@ -210,7 +238,7 @@ final class ReportingTest extends TestCase
     {
         $check = $this->reporting(failingStore: true)->afterSettingsSaved('secret-key');
 
-        self::assertSame(ApiKeyCheck::OK, $check?->status);
+        self::assertSame(KeyCheck::OK, $check?->status);
         self::assertNull($this->stored);
 
         $this->stored = '{not json';
@@ -249,16 +277,16 @@ final class ReportingTest extends TestCase
         self::assertSame('Not checked yet: save the connection or click Test connection.', Reporting::checkText(null, $messages));
         self::assertSame(
             'API key checked: the connection to Supertext works. Checked 2026-10-14 08:00 UTC.',
-            Reporting::checkText(new ApiKeyCheck('ok', '2026-10-14T08:00:00Z', 200), $messages),
+            Reporting::checkText(new KeyCheck('ok', '2026-10-14T08:00:00Z', 200), $messages),
         );
-        self::assertStringContainsString('https://www.supertext.com/en/integrations/api', Reporting::checkText(new ApiKeyCheck('invalid', '2026-10-14T08:00:00Z', 401), $messages));
-        self::assertStringContainsString('https://www.supertext.com/person/en/account/signin', Reporting::checkText(new ApiKeyCheck('missing', '2026-10-14T08:00:00Z'), $messages));
-        self::assertStringStartsWith("The API key couldn't be checked because", Reporting::checkText(new ApiKeyCheck('unreachable', '2026-10-14T08:00:00Z'), $messages));
-        self::assertStringContainsString('error (HTTP 429)', Reporting::checkText(new ApiKeyCheck('error', '2026-10-14T08:00:00Z', 429), $messages));
+        self::assertStringContainsString('https://www.supertext.com/en/integrations/api', Reporting::checkText(new KeyCheck('invalid', '2026-10-14T08:00:00Z', 401), $messages));
+        self::assertStringContainsString('https://www.supertext.com/person/en/account/signin', Reporting::checkText(new KeyCheck('missing', '2026-10-14T08:00:00Z'), $messages));
+        self::assertStringStartsWith("The API key couldn't be checked because", Reporting::checkText(new KeyCheck('unreachable', '2026-10-14T08:00:00Z'), $messages));
+        self::assertStringContainsString('error (HTTP 429)', Reporting::checkText(new KeyCheck('error', '2026-10-14T08:00:00Z', 429), $messages));
 
         $german = json_decode((string) file_get_contents(__DIR__ . '/../../app/Resources/i18n/de_DE/Action.json'), true)['messages'];
         $de     = new Messages(static fn (string $name): string => $german[$name] ?? $name);
-        self::assertStringStartsWith('API-Schlüssel geprüft: Die Verbindung zu Supertext funktioniert. Geprüft am', Reporting::checkText(new ApiKeyCheck('ok', '2026-10-14T08:00:00Z', 200), $de));
+        self::assertStringStartsWith('API-Schlüssel geprüft: Die Verbindung zu Supertext funktioniert. Geprüft am', Reporting::checkText(new KeyCheck('ok', '2026-10-14T08:00:00Z', 200), $de));
 
         $reporting = $this->reporting();
         $reporting->afterSettingsSaved('secret-key');

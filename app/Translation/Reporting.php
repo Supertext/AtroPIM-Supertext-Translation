@@ -10,18 +10,23 @@ declare(strict_types=1);
 
 namespace SupertextTranslation\Translation;
 
+use SupertextTranslation\PluginHealth\CallableKeyChecker;
+use SupertextTranslation\PluginHealth\InstallationReporter;
+use SupertextTranslation\PluginHealth\KeyCheck;
+use SupertextTranslation\PluginHealth\PingResponse;
+use SupertextTranslation\PluginHealth\ReporterResult;
+use SupertextTranslation\PluginHealth\ReporterState;
 use SupertextTranslation\Sdk\Http\HttpTransport;
-use SupertextTranslation\Sdk\V1\ApiKeyCheck;
-use SupertextTranslation\Sdk\V1\InstallationReporter;
-use SupertextTranslation\Sdk\V1\PingResponse;
-use SupertextTranslation\Sdk\V1\ReporterResult;
-use SupertextTranslation\Sdk\V1\ReporterState;
+use SupertextTranslation\Sdk\Supertext;
+use SupertextTranslation\Sdk\V1\Client;
+use SupertextTranslation\Sdk\V1\Protocol;
 
 /**
  * Version reports to the Supertext Commando Center, the automatic API key check and the callback
  * ping (Commando-Center-Supertext-Translation → docs/DEVELOPER.md → Report protocol). The protocol
- * is the SDK's (InstallationReporter); this class gives it what the module knows and keeps the
- * reporter's JSON state through two closures (ReportingFactory stores it in AtroCore's config).
+ * is Supertext Plugin Health's (InstallationReporter, bundled in lib/supertext-plugin-health), with
+ * the Supertext SDK's checkApiKey() as its key check; this class gives it what the module knows and
+ * keeps the reporter's JSON state through two closures (ReportingFactory stores it in AtroCore's config).
  *
  * Nothing here ever throws: a broken state store or an unreachable center must never fail a save,
  * a "Test connection" or a translation. No AtroCore dependencies (unit-tested).
@@ -54,6 +59,7 @@ final class Reporting
      * @param bool|null                   $setting the connection's "Send version information to Supertext" (null: not set, on)
      * @param string                      $siteUrl AtroCore's siteUrl
      * @param string                      $apiBaseUrl the Supertext API the key check calls (the connection's endpoint)
+     * @param HttpTransport|null          $transport  tests: the key check's and the report's HTTP (default: curl)
      * @param \Closure(): mixed           $load
      * @param \Closure(string): void      $save
      * @param (callable(float): void)|null $sleep tests
@@ -77,18 +83,24 @@ final class Reporting
         $siteUrl  = rtrim(trim($siteUrl), '/');
         $callback = $siteUrl !== '' ? self::callbackUrl($siteUrl) : '';
 
+        $pluginVersion = $pluginVersion !== '' ? $pluginVersion : 'dev';
+        $userAgent     = self::PLUGIN_NAME . '/' . $pluginVersion;
+
         $reporter = new InstallationReporter(
             enabled: $enabled && $siteUrl !== '',
             siteUrl: $siteUrl,
             pluginName: self::PLUGIN_NAME,
-            pluginVersion: $pluginVersion !== '' ? $pluginVersion : 'dev',
+            pluginVersion: $pluginVersion,
             systemName: $systemName,
+            keyChecker: new CallableKeyChecker(
+                static fn (#[\SensitiveParameter] string $key) => (new Client($key, baseUrl: $apiBaseUrl, userAgent: $userAgent, transport: $transport, sleep: $sleep, now: $now))->checkApiKey(),
+                [Protocol::class, 'apiKeyFingerprint'],
+            ),
             systemVersion: $systemVersion !== '' ? $systemVersion : null,
+            sdkVersion: Supertext::SDK_VERSION,
             callbackUrl: $callback !== '' ? $callback : null,
             reportUrl: $reportUrl,
-            transport: $transport,
-            apiBaseUrl: $apiBaseUrl,
-            sleep: $sleep,
+            transport: $transport !== null ? new ReportTransport($transport) : null,
             now: $now,
         );
 
@@ -113,7 +125,7 @@ final class Reporting
         return ($setting ?? true) && !InstallationReporter::reportsEnabled($setting);
     }
 
-    /** The answer of GET /api/supertext/ping (status, headers and body exactly as the SDK builds them). */
+    /** The answer of GET /api/supertext/ping (status, headers and body exactly as Plugin Health builds them). */
     public static function ping(?string $challenge, ?bool $setting): PingResponse
     {
         return InstallationReporter::pingResponse($challenge, self::PLUGIN_NAME, InstallationReporter::reportsEnabled($setting));
@@ -130,7 +142,7 @@ final class Reporting
     }
 
     /** After the Supertext connection was saved: checks the key, reports `installed` or `settings_saved`. */
-    public function afterSettingsSaved(#[\SensitiveParameter] string $apiKey): ?ApiKeyCheck
+    public function afterSettingsSaved(#[\SensitiveParameter] string $apiKey): ?KeyCheck
     {
         return $this->run(fn (?ReporterState $state): ReporterResult => $this->reporter->afterSettingsSaved($state, $apiKey))?->check;
     }
@@ -148,7 +160,7 @@ final class Reporting
     }
 
     /** "Test connection": checks the key, reports a changed result. */
-    public function testConnection(#[\SensitiveParameter] string $apiKey): ?ApiKeyCheck
+    public function testConnection(#[\SensitiveParameter] string $apiKey): ?KeyCheck
     {
         return $this->run(fn (?ReporterState $state): ReporterResult => $this->reporter->testConnection($state, $apiKey))?->check;
     }
@@ -162,7 +174,7 @@ final class Reporting
     }
 
     /** The latest stored key check, for the connection page. */
-    public function latestCheck(): ?ApiKeyCheck
+    public function latestCheck(): ?KeyCheck
     {
         return $this->state()?->keyCheck;
     }
@@ -170,7 +182,7 @@ final class Reporting
     /**
      * The key check for people: the center's message for its status, then when it ran.
      */
-    public static function checkText(?ApiKeyCheck $check, Messages $messages): string
+    public static function checkText(?KeyCheck $check, Messages $messages): string
     {
         if ($check === null) {
             return $messages->text('key_check_none');
@@ -178,10 +190,10 @@ final class Reporting
 
         $status = $check->httpStatus !== null ? 'HTTP ' . $check->httpStatus : ($check->errorCode ?? '?');
         $text   = match ($check->status) {
-            ApiKeyCheck::OK          => $messages->text('key_check_ok'),
-            ApiKeyCheck::INVALID     => $messages->text('key_check_invalid'),
-            ApiKeyCheck::MISSING     => $messages->text('key_check_missing'),
-            ApiKeyCheck::UNREACHABLE => $messages->text('key_check_unreachable'),
+            KeyCheck::OK          => $messages->text('key_check_ok'),
+            KeyCheck::INVALID     => $messages->text('key_check_invalid'),
+            KeyCheck::MISSING     => $messages->text('key_check_missing'),
+            KeyCheck::UNREACHABLE => $messages->text('key_check_unreachable'),
             default                  => $messages->text('key_check_error', ['status' => $status]),
         };
         $time = strtotime($check->checkedAt);

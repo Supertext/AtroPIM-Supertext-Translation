@@ -15,7 +15,7 @@ use Atro\ConnectionType\ConnectionInterface;
 use Atro\ConnectionType\TestConnectionInterface;
 use Atro\Core\Exceptions\BadRequest;
 use Espo\ORM\Entity;
-use SupertextTranslation\Sdk\V1\ApiKeyCheck;
+use SupertextTranslation\PluginHealth\KeyCheck;
 use SupertextTranslation\Translation\ConnectionResolver;
 use SupertextTranslation\Translation\ConnectionStatus;
 use SupertextTranslation\Translation\Messages;
@@ -45,7 +45,7 @@ class ConnectionSupertext extends AbstractConnection implements ConnectionInterf
 
         ConnectionStatus::store($this->container, $connectionEntity, $settings, $reporting);
 
-        if ($check === null || $check->status !== ApiKeyCheck::OK) {
+        if ($check === null || $check->status !== KeyCheck::OK) {
             throw new BadRequest(Reporting::checkText($check, $messages));
         }
 

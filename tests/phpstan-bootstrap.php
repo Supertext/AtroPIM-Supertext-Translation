@@ -12,13 +12,15 @@ if (!is_file($vendor . '/autoload.php')) {
 }
 require $vendor . '/autoload.php';
 
-// The bundled Supertext SDK (lib/supertext-sdk) isn't in that installation.
+// The bundled Supertext SDK (lib/supertext-sdk) and Supertext Plugin Health (lib/supertext-plugin-health)
+// aren't in that installation.
 spl_autoload_register(static function (string $class): void {
-    $prefix = 'SupertextTranslation\\Sdk\\';
-    if (str_starts_with($class, $prefix)) {
-        $file = dirname(__DIR__) . '/lib/supertext-sdk/src/' . str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';
-        if (is_file($file)) {
-            require $file;
+    foreach (['SupertextTranslation\\Sdk\\' => '/lib/supertext-sdk/src/', 'SupertextTranslation\\PluginHealth\\' => '/lib/supertext-plugin-health/src/'] as $prefix => $dir) {
+        if (str_starts_with($class, $prefix)) {
+            $file = dirname(__DIR__) . $dir . str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';
+            if (is_file($file)) {
+                require $file;
+            }
         }
     }
 });
