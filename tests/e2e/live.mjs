@@ -68,10 +68,15 @@ function fieldsOf(snap, product) {
 }
 
 // --- Setup -------------------------------------------------------------------------------
-// The additional languages (AtroCore codes, e.g. de_CH); the main language is the source.
-const targets = await q("SELECT code FROM language WHERE deleted = 0 AND role = 'additional' ORDER BY code")
-	.then((rows) => rows.map((r) => r.code))
-	.catch((e) => { console.log(`note languages from E2E_LANGUAGES (${e.message})`); return need('E2E_LANGUAGES').split(','); });
+// The additional languages (AtroCore codes, e.g. de_CH), from the product's language columns
+// (name_de_ch); E2E_LANGUAGES overrides. The main language is the source.
+const targets = process.env.E2E_LANGUAGES
+	? process.env.E2E_LANGUAGES.split(',').map((l) => l.trim()).filter(Boolean)
+	: (await q("SHOW COLUMNS FROM product LIKE 'name\\_%'"))
+		.map((c) => c.Field.match(/^name_([a-z]{2,3})_([a-z0-9]+)$/))
+		.filter(Boolean)
+		.map(([, lang, region]) => `${lang}_${region.toUpperCase()}`)
+		.sort();
 const before = await snapshot();
 console.log(`Products: ${before.products.map((p) => p.number).join(', ')}; attribute values: ${before.values.length}; targets: ${targets.join(', ')}`);
 check('demo has additional languages', targets.length > 0);
