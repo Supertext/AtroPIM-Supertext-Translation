@@ -70,7 +70,7 @@
     "supertextNoTargets": "Keine anderen Sprachen zum Übersetzen.",
     "supertextRecordsTranslated": "Supertext hat {done} von {total} Datensätzen übersetzt.",
     "supertextRecordsFailed": "Den Grund zeigt das Panel Läufe der Aktion.",
-    "supertextUnsupportedLanguage": "Die Sprache {language} ist noch keiner Supertext-Sprache zugeordnet. Bitten Sie Ihre Administratorin oder Ihren Administrator, sie in der Sprachzuordnung der Supertext-Verbindung zuzuordnen (Verwaltung → Verbindungen), z. B. \"de_DE = de-CH\".",
+    "supertextUnsupportedLanguage": "Die Sprache {language} ist noch keiner Supertext-Sprache zugeordnet. Bitten Sie Ihre Administratorin oder Ihren Administrator, in der Supertext-Verbindung eine zu wählen (Verwaltung → Verbindungen → die Supertext-Verbindung → «Supertext-Sprache für {language}»).",
     "supertextUnsupportedFeature": "Supertext bietet für diese Sprache keine formelle oder informelle Anrede an. Stellen Sie die Anrede der Aktion auf «Standard».",
     "supertextPolitenessSkipped": "Supertext bietet für {language} keine formelle oder informelle Anrede an: mit der Standard-Anrede übersetzt.",
     "supertextKeyCheckOk": "API-Schlüssel geprüft: Die Verbindung zu Supertext funktioniert.",
@@ -84,7 +84,7 @@
     "supertextReportsOff": "Es werden keine Versionsinformationen an Supertext gesendet.",
     "supertextReportsOffEnvironment": "Es werden keine Versionsinformationen an Supertext gesendet: Auf dem Server ist SUPERTEXT_VERSION_REPORTS=0 gesetzt, das diese Einstellung übersteuert.",
     "supertextLanguageMapped": "{language} → {code}",
-    "supertextLanguageNotMapped": "{language}: nicht zugeordnet. Ergänzen Sie in der Sprachzuordnung eine Zeile \"{language} = …\" mit dem Supertext-Code; bis dahin wird sie nicht übersetzt.",
+    "supertextLanguageNotMapped": "{language}: keine Supertext-Sprache. Wählen Sie in ihrem Auswahlfeld in der Supertext-Verbindung eine; bis dahin wird sie nicht übersetzt.",
     "supertextLanguageNoPoliteness": "(keine formelle/informelle Anrede)",
     "supertextLanguageUnlisted": "(nicht in der Supertext-Liste vom Oktober 2026: wird wie eingetragen gesendet)",
     "supertextLanguageSource": "· als Ausgangssprache: {code}",
@@ -115,6 +115,7 @@
     "supertextFileOverwrite": "Bestehende Übersetzungen überschreiben",
     "supertextFileSubmit": "Übersetzung importieren",
     "supertextFileHelp": "Laden Sie eine Datei hoch, die mit «Für Übersetzung exportieren» exportiert und inzwischen übersetzt wurde. Die Texte werden in der Zielsprache des Datensatzes gespeichert, wie bei einer Übersetzung mit Supertext.",
-    "supertextFileResult": "Ergebnis"
+    "supertextFileResult": "Ergebnis",
+    "supertextInvalidLanguageCode": "«{code}» ist keine Supertext-Sprache. Wählen Sie eine aus der Liste."
   }
 }

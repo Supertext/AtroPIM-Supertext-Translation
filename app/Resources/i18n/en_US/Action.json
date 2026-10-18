@@ -70,7 +70,7 @@
     "supertextNoTargets": "No other languages to translate into.",
     "supertextRecordsTranslated": "Supertext translated {done} of {total} records.",
     "supertextRecordsFailed": "The Executions panel of the action shows why.",
-    "supertextUnsupportedLanguage": "The language {language} has no Supertext language yet. Ask your administrator to map it in the language mapping of the Supertext connection (Administration → Connections), e.g. \"de_DE = de-CH\".",
+    "supertextUnsupportedLanguage": "The language {language} has no Supertext language yet. Ask your administrator to choose one for it in the Supertext connection (Administration → Connections → the Supertext connection → \"Supertext language for {language}\").",
     "supertextUnsupportedFeature": "Supertext offers no formal or informal tone for this language. Set the action's form of address to Default.",
     "supertextPolitenessSkipped": "Supertext offers no formal or informal tone for {language}: translated with the default tone.",
     "supertextKeyCheckOk": "API key checked: the connection to Supertext works.",
@@ -84,7 +84,7 @@
     "supertextReportsOff": "Version information is not sent to Supertext.",
     "supertextReportsOffEnvironment": "Version information is not sent to Supertext: SUPERTEXT_VERSION_REPORTS=0 is set on the server and overrides this setting.",
     "supertextLanguageMapped": "{language} → {code}",
-    "supertextLanguageNotMapped": "{language}: not mapped. Add a line \"{language} = …\" with its Supertext code to the language mapping; until then it isn't translated.",
+    "supertextLanguageNotMapped": "{language}: no Supertext language. Choose one in its combo box on the Supertext connection; until then it isn't translated.",
     "supertextLanguageNoPoliteness": "(no formal/informal tone)",
     "supertextLanguageUnlisted": "(not in Supertext's list of October 2026: sent as entered)",
     "supertextLanguageSource": "· as source language: {code}",
@@ -115,6 +115,7 @@
     "supertextFileOverwrite": "Overwrite existing translations",
     "supertextFileSubmit": "Import translation",
     "supertextFileHelp": "Upload a file exported with Export for translation and translated since. The texts are saved in the record's target language, like a translation with Supertext.",
-    "supertextFileResult": "Result"
+    "supertextFileResult": "Result",
+    "supertextInvalidLanguageCode": "\"{code}\" is not a Supertext language. Choose one from the list."
   }
 }

@@ -91,8 +91,8 @@ Errors instead of a summary: *This file isn't a valid XLIFF or HTML translation 
 | `Supertext translated 3 of 4 records.` | Several products: one failed; the action's **Executions** panel (administrators) shows why. |
 | `The translation is longer than the field allows: Name` | The Name translation was too long and not saved; the other fields were. |
 | `No Supertext API key is configured …` / `Authentication failed …` | The Supertext connection isn't set up yet. Ask your administrator. |
-| `The language es_ES has no Supertext language yet. Ask your administrator to map it …` | Your administrator hasn't told AtroPIM which Supertext language this is (the connection's *Language mapping*). Nothing was sent to Supertext. Ask your administrator. |
-| `Supertext does not support this language pair (en → …)` | Supertext can't translate into this language, or the connection's language code for it is wrong. Tell your administrator. |
+| `The language fr_BE has no Supertext language yet. Ask your administrator to choose one …` | AtroPIM doesn't know which Supertext language this is, and there is no obvious one: your administrator chooses it on the Supertext connection (*Supertext language for … (fr_BE)*). Nothing was sent to Supertext. Ask your administrator. |
+| `Supertext does not support this language pair (en → …)` | Supertext can't translate into this language, or the connection's Supertext language for it is wrong. Tell your administrator. |
 | `… translated (4 fields). Supertext offers no formal or informal tone for en_US: translated with the default tone.` | Done; the action asks for a formal or informal form of address, but Supertext offers none for this language (e.g. English), so it was translated with the default tone. |
 | `Supertext offers no formal or informal tone for this language …` | Supertext refused the form of address the action asks for. Ask your administrator to set the action's form of address to *Default*. |
 | `Too many requests to Supertext` / `Timed out …` | Supertext was busy or the text was long. Try again in a moment. |

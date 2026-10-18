@@ -57,6 +57,26 @@ assert r['api_key_check']['status'] == 'ok' and r['api_key_configured'] is True,
 assert 'anything' not in json.dumps(reports), 'the API key must never be reported'
 PY
 
+# The language mapping: one combo box per language, preselected with Supertext's code, validated on
+# save, and the old text field's lines moved into the combo boxes (as the administrator, REST API).
+admin_token=$(curl -sf -H "Authorization-Token: $(printf '%s:%s' "$DEMO_ADMIN_EMAIL" "$DEMO_ADMIN_PASSWORD" | base64 -w0)" http://127.0.0.1:$PORT/api/userSession | python3 -c 'import json,sys; print(json.load(sys.stdin)["user"]["token"])')
+admin="Authorization-Token: $(printf '%s:%s' "$DEMO_ADMIN_EMAIL" "$admin_token" | base64 -w0)"
+connection=$(sql "select id from connection where type = 'supertext' and deleted = 0")
+field() { curl -sf -H "$admin" "http://127.0.0.1:$PORT/api/Connection/$connection" | python3 -c "import json,sys; print(json.load(sys.stdin).get('$1'))"; }
+patch() { curl -s -o /dev/null -w '%{http_code}' -H "$admin" -H 'Content-Type: application/json' -X PATCH "http://127.0.0.1:$PORT/api/Connection/$connection" -d "$1"; }
+test "$(field supertextCodeDeCh)" = de-CH
+test "$(field supertextCodeEnUs)" = en-US
+grep -qF '"fr-FR"' <<< "$(curl -sf -H "$admin" http://127.0.0.1:$PORT/api/Metadata | python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin)["entityDefs"]["Connection"]["fields"]["supertextCodeFrCh"]["options"]))')"
+test "$(patch '{"supertextCodeFrCh":"xx-YY"}')" = 400
+test "$(patch '{"supertextCodeFrCh":"fr-FR"}')" = 200
+grep -qF 'fr_CH → fr-FR' <<< "$(console supertext check)"
+test "$(patch '{"supertextCodeFrCh":"fr-CH"}')" = 200
+sql "update connection set data = json_remove(json_set(data, '$.supertextLanguageCodes', 'it_CH = it-IT\nxx_YY = xx-YY'), '$.supertextCodeItCh') where id = '$connection'"
+test "$(field supertextCodeItCh)" = it-IT
+test "$(sql "select json_unquote(json_extract(data, '$.supertextLanguageCodes')) from connection where id = '$connection'")" = 'xx_YY = xx-YY'
+test "$(patch '{"supertextCodeItCh":"it-CH"}')" = 200
+grep -qF 'it_CH → it-CH' <<< "$(console supertext check)"
+
 # The public ping endpoint (no login): the challenge echoed, nothing else.
 test "$(curl -s "http://127.0.0.1:$PORT/api/supertext/ping?challenge=ci-challenge-0123456789")" = '{"ok":true,"plugin":"AtroPIM-Supertext-Translation","challenge":"ci-challenge-0123456789"}'
 test "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/api/supertext/ping?challenge=short")" = 400

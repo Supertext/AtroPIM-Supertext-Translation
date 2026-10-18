@@ -31,7 +31,11 @@ final class Settings
     /** @var array<string, string> AtroCore language code => Supertext language code (the connection's language mapping) */
     private array $languageCodes;
 
-    /** @param bool|null $versionReports the connection's "Send version information to Supertext"; null: not set (on) */
+    /**
+     * @param string                $languageCodes  the old text mapping ("de_DE = de-CH" per line), see LanguageMapping
+     * @param bool|null             $versionReports the connection's "Send version information to Supertext"; null: not set (on)
+     * @param array<string, string> $chosenCodes    the connection's combo boxes (AtroCore language => Supertext code); they win
+     */
     public function __construct(
         private readonly string $apiKey,
         private readonly string $environment = 'live',
@@ -39,20 +43,25 @@ final class Settings
         private readonly int $timeout = self::DEFAULT_TIMEOUT,
         string $languageCodes = '',
         private readonly ?bool $versionReports = null,
+        array $chosenCodes = [],
     ) {
-        $this->languageCodes = self::parseLanguageCodes($languageCodes);
+        $this->languageCodes = array_merge(self::parseLanguageCodes($languageCodes), $chosenCodes);
     }
 
-    /** @param array<string, mixed> $data the connection's data fields */
-    public static function fromConnectionData(array $data, string $decryptedApiKey): self
+    /**
+     * @param array<string, mixed> $data      the connection's data fields
+     * @param list<string>         $languages AtroCore's languages (the combo boxes of the language mapping)
+     */
+    public static function fromConnectionData(array $data, string $decryptedApiKey, array $languages = []): self
     {
         return new self(
             $decryptedApiKey,
             (string) ($data['supertextEnvironment'] ?? 'live'),
             (string) ($data['supertextApiUrl'] ?? ''),
             (int) ($data['supertextTimeout'] ?? self::DEFAULT_TIMEOUT),
-            (string) ($data['supertextLanguageCodes'] ?? ''),
+            (string) ($data[LanguageMapping::LEGACY_FIELD] ?? ''),
             isset($data['supertextVersionReports']) ? (bool) $data['supertextVersionReports'] : null,
+            LanguageMapping::fromData($data, $languages),
         );
     }
 
@@ -102,8 +111,9 @@ final class Settings
 
     /**
      * Supertext target code for an AtroCore language: the connection's language mapping, else the
-     * Supertext code it equals apart from case and _/- (de_CH → de-CH, es → es). No guessing: anything
-     * else throws unsupported_language and nothing is sent.
+     * Supertext code it equals apart from case and _/- (de_CH → de-CH, es → es), else the SDK's
+     * default (de → de-DE, es_ES → es, zh_CN → zh-Hans). Anything else throws unsupported_language
+     * and nothing is sent.
      *
      * @throws SupertextException key unsupported_language
      */
@@ -143,8 +153,8 @@ final class Settings
 
     /**
      * One line per AtroCore language for the connection's "Languages" field: its Supertext code (and
-     * the source code for the main language), "not mapped", and a note where Supertext offers no
-     * formal/informal tone.
+     * the source code for the main language), "no Supertext language" for a language without a
+     * mapping and without a default, and a note where Supertext offers no formal/informal tone.
      *
      * @param list<string> $languages the main language first
      */

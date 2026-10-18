@@ -70,7 +70,7 @@
     "supertextNoTargets": "Nessun'altra lingua in cui tradurre.",
     "supertextRecordsTranslated": "Supertext ha tradotto {done} record su {total}.",
     "supertextRecordsFailed": "Il pannello Esecuzioni dell'azione ne mostra il motivo.",
-    "supertextUnsupportedLanguage": "La lingua {language} non è ancora associata a una lingua Supertext. Chieda al Suo amministratore di associarla nell'associazione delle lingue della connessione Supertext (Amministrazione → Connessioni), p. es. «de_DE = de-CH».",
+    "supertextUnsupportedLanguage": "La lingua {language} non è ancora associata a una lingua Supertext. Chieda al Suo amministratore di sceglierne una nella connessione Supertext (Amministrazione → Connessioni → la connessione Supertext → «Lingua Supertext per {language}»).",
     "supertextUnsupportedFeature": "Supertext non offre un tono formale o informale per questa lingua. Imposti la forma di cortesia dell'azione su «Predefinita».",
     "supertextPolitenessSkipped": "Supertext non offre un tono formale o informale per {language}: tradotto con il tono predefinito.",
     "supertextKeyCheckOk": "Chiave API verificata: la connessione a Supertext funziona.",
@@ -84,7 +84,7 @@
     "supertextReportsOff": "Non vengono inviate informazioni sulla versione a Supertext.",
     "supertextReportsOffEnvironment": "Non vengono inviate informazioni sulla versione a Supertext: sul server è impostato SUPERTEXT_VERSION_REPORTS=0, che prevale su questa impostazione.",
     "supertextLanguageMapped": "{language} → {code}",
-    "supertextLanguageNotMapped": "{language}: non associata. Aggiunga all'associazione delle lingue una riga «{language} = …» con il suo codice Supertext; fino ad allora non viene tradotta.",
+    "supertextLanguageNotMapped": "{language}: nessuna lingua Supertext. Ne scelga una nel suo menu a tendina della connessione Supertext; fino ad allora non viene tradotta.",
     "supertextLanguageNoPoliteness": "(nessun tono formale/informale)",
     "supertextLanguageUnlisted": "(non presente nell'elenco Supertext di ottobre 2026: inviato come inserito)",
     "supertextLanguageSource": "· come lingua di partenza: {code}",
@@ -115,6 +115,7 @@
     "supertextFileOverwrite": "Sovrascrivi le traduzioni esistenti",
     "supertextFileSubmit": "Importa traduzione",
     "supertextFileHelp": "Carichi un file esportato con «Esporta per la traduzione» e nel frattempo tradotto. I testi vengono salvati nella lingua di destinazione del record, come in una traduzione con Supertext.",
-    "supertextFileResult": "Risultato"
+    "supertextFileResult": "Risultato",
+    "supertextInvalidLanguageCode": "«{code}» non è una lingua Supertext. Ne scelga una dall'elenco."
   }
 }

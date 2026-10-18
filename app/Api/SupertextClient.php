@@ -44,7 +44,7 @@ final class SupertextClient
         SdkException::MISSING_API_KEY => ['no_api_key', 'No Supertext API key is configured.'],
         SdkException::AUTHENTICATION_FAILURE => ['auth_failed', 'Authentication failed. Please check the Supertext API key.'],
         SdkException::INVALID_LANGUAGE_PAIR => ['invalid_language_pair', 'Supertext does not support this language pair (%s → %s).'],
-        SdkException::UNSUPPORTED_LANGUAGE => ['unsupported_language', 'The language %s has no Supertext language yet. Map it in the language mapping of the Supertext connection.'],
+        SdkException::UNSUPPORTED_LANGUAGE => ['unsupported_language', 'The language %s has no Supertext language yet. Choose one for it in the Supertext connection (Administration → Connections).'],
         SdkException::UNSUPPORTED_FEATURE => ['unsupported_feature', 'Supertext offers no formal or informal tone for this language. Set the form of address to Default.'],
         SdkException::NOT_FOUND => ['not_found', 'The requested Supertext resource was not found.'],
         SdkException::PAYLOAD_TOO_LARGE => ['too_large', 'The content is too large for Supertext to translate in one go.'],

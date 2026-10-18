@@ -90,7 +90,7 @@ class SettingsTest extends TestCase
             "en_US → en-US (no formal/informal tone) · as source language: en\n"
             . "de_CH → de-CH\n"
             . "es_ES → es\n"
-            . 'fr_BE: not mapped. Add a line "fr_BE = …" with its Supertext code to the language mapping; until then it isn\'t translated.' . "\n"
+            . 'fr_BE: no Supertext language. Choose one in its combo box on the Supertext connection; until then it isn\'t translated.' . "\n"
             . "rm_CH → rm (no formal/informal tone)\n"
             . "xx_XX → xx-YY (not in Supertext's list of October 2026: sent as entered)",
             $status,
