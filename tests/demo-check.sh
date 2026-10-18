@@ -80,4 +80,27 @@ result=$(curl -sf -H "Authorization-Token: $(printf '%s:%s' "$DEMO_EDITOR_EMAIL"
 echo "$result"
 grep -qF 'translated (4 fields)' <<< "$result"
 test "$(sql "select name_fr_ch from product where number = 'dark-chocolate-72'")" = "Tablette de chocolat noir, 72 % de cacao"
+
+# Export for translation → Import translation, as the editor through the REST API.
+auth="Authorization-Token: $(printf '%s:%s' "$DEMO_EDITOR_EMAIL" "$token" | base64 -w0)"
+xliff=$(mktemp)
+headers=$(curl -sf -H "$auth" -D - -o "$xliff" "http://127.0.0.1:$PORT/api/supertext/export?entity=Product&id=$praline&targets=de_CH&format=xliff&overwrite=1")
+grep -qi '^content-type: application/x-xliff+xml' <<< "$headers"
+grep -qi "^content-disposition: attachment; filename=\"atropim-product-$praline-de_CH.xlf\"" <<< "$headers"
+grep -qF "original=\"Product:$praline:en_US:de_CH\"" "$xliff"
+python3 - "$xliff" <<'PY'
+import re, sys
+path = sys.argv[1]
+xliff = open(path, encoding='utf-8').read()
+xliff, n = re.subn(r'(<trans-unit id="name"[^>]*>\s*<source>.*?</source>)', r'\1<target>Pralinenschachtel aus der Datei</target>', xliff, flags=re.S)
+assert n == 1, 'no name unit'
+open(path, 'w', encoding='utf-8').write(xliff)
+PY
+result=$(curl -sf -H "$auth" -H 'Accept: application/json' -F "file=@$xliff;type=application/x-xliff+xml" -F overwrite=1 "http://127.0.0.1:$PORT/api/supertext/import")
+echo "$result"
+grep -qF 'Imported: 1' <<< "$result"
+test "$(sql "select name_de_ch from product where id = '$praline'")" = "Pralinenschachtel aus der Datei"
+test "$(curl -s -o /dev/null -w '%{http_code}' -H "$auth" -F "file=@$xliff" -F token=x -b "auth-token=$token" "http://127.0.0.1:$PORT/api/supertext/import")" = 403
+grep -qF 'Translated file (XLIFF or HTML)' <<< "$(curl -sf -H "$auth" "http://127.0.0.1:$PORT/api/supertext/import")"
+rm -f "$xliff"
 echo "Demo check passed"

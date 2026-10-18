@@ -58,18 +58,23 @@ class SettingsTest extends TestCase
     {
         $settings = new Settings('k');
 
-        foreach (['de', 'es_ES', 'sl_SI', 'zh_CN', 'en'] as $language) {
+        // Since SDK 0.4.0 an obvious default applies (de → de-DE, es_ES → es, zh_CN → zh-Hans); nothing else is guessed.
+        foreach (['de' => 'de-DE', 'es_ES' => 'es', 'sl_SI' => 'sl', 'zh_CN' => 'zh-Hans', 'en' => 'en-US'] as $language => $code) {
+            self::assertSame($code, $settings->languageCodeOrNull($language), "$language has a default");
+        }
+
+        foreach (['de_LI', 'en_IE', 'fr_BE', 'sr_RS', 'gsw'] as $language) {
             self::assertNull($settings->languageCodeOrNull($language), "$language must be mapped");
         }
 
         try {
-            $settings->languageCode('es_ES');
+            $settings->languageCode('fr_BE');
             self::fail('Expected unsupported_language');
         } catch (SupertextException $e) {
             self::assertSame('unsupported_language', $e->key);
-            self::assertSame(['language' => 'es_ES'], $e->params);
-            self::assertStringContainsString('The language es_ES has no Supertext language yet', $e->getMessage());
-            self::assertStringStartsWith('The language es_ES has no Supertext language yet.', (new Messages())->exception($e));
+            self::assertSame(['language' => 'fr_BE'], $e->params);
+            self::assertStringContainsString('The language fr_BE has no Supertext language yet', $e->getMessage());
+            self::assertStringStartsWith('The language fr_BE has no Supertext language yet.', (new Messages())->exception($e));
         }
 
         $this->expectException(SupertextException::class);
@@ -79,13 +84,13 @@ class SettingsTest extends TestCase
     public function testLanguageStatusShowsUnmappedLanguagesAndMissingTones(): void
     {
         $settings = Settings::fromConnectionData(['supertextLanguageCodes' => "es_ES = es\nrm_CH = rm\nxx_XX = xx-YY"], 'k');
-        $status   = $settings->languageStatus(['en_US', 'de_CH', 'es_ES', 'sl_SI', 'rm_CH', 'xx_XX'], 'en_US', new Messages());
+        $status   = $settings->languageStatus(['en_US', 'de_CH', 'es_ES', 'fr_BE', 'rm_CH', 'xx_XX'], 'en_US', new Messages());
 
         self::assertSame(
             "en_US → en-US (no formal/informal tone) · as source language: en\n"
             . "de_CH → de-CH\n"
             . "es_ES → es\n"
-            . 'sl_SI: not mapped. Add a line "sl_SI = …" with its Supertext code to the language mapping; until then it isn\'t translated.' . "\n"
+            . 'fr_BE: not mapped. Add a line "fr_BE = …" with its Supertext code to the language mapping; until then it isn\'t translated.' . "\n"
             . "rm_CH → rm (no formal/informal tone)\n"
             . "xx_XX → xx-YY (not in Supertext's list of October 2026: sent as entered)",
             $status,

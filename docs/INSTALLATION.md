@@ -83,6 +83,19 @@ Translating is an AtroCore **action** of the new type *Translate with Supertext*
 
 Several actions are fine, e.g. *Translate into French* with only `fr_FR` as target, or one that overwrites existing translations for a chief editor. AtroCore's **Conditions** panel limits the records the action runs on, for example only products in status *Draft*.
 
+### Export for translation and Import translation
+
+For translations made outside the API (a translation tool such as Trados, memoQ or Phrase, a translator, Supertext's web app), two more action types export a record's texts as a file and import the translated file again. Nothing to configure besides the actions:
+
+1. **Export for translation**: **Type** *Export for translation*, **Usage** *Record*, **Source entity** *Product* (or another entity), **Display** as you like, **Mass action** off. Options: the Supertext connection (only for its language mapping: the codes written into the file), source and target languages, **File format** (*XLIFF 1.2 (for translation tools)*: all target languages in one file; *HTML (one language per file)*: exactly one target language), **Overwrite existing translations** (off: only the fields still empty in a target language go into the file, as for *Translate with Supertext*). Clicking the button downloads `atropim-product-<id>-<language>.xlf` (or `.html`; `atropim-product-<id>.xlf` for several languages).
+2. **Import translation**: **Type** *Import translation*, **Usage** *Record* (button on the record) or *Entity* (button in the list). It has no options: the button opens the upload page (`/api/supertext/import`) in a new tab; the file itself says which records and languages it belongs to.
+
+Don't tick **Execute in background** for these two. Both open a new browser tab: if the browser blocks pop-ups for AtroPIM, allow them. The upload page and the download use the editor's AtroCore session.
+
+- **Upload size:** at most 10 MB per file. PHP's `upload_max_filesize` and `post_max_size` must allow that (their defaults, 2 MB and 8 MB, are lower: raise them to `10M`/`12M` if editors import large files). The file is read in memory and never stored.
+- An unmapped language doesn't block the export: it is written into the file with its AtroCore code (`xx_YY` → `xx-YY`).
+- The same as console commands: `supertext export` and `supertext import` (see [Console commands](#console-commands)), and as REST API: `GET /api/supertext/export?entity=Product&id=<id>&targets=de_CH&format=xliff`, `POST /api/supertext/import` (multipart field `file`, optional `includeChanged=1`, `overwrite=1`; `Accept: application/json` for a JSON summary).
+
 ## Languages
 
 AtroCore translates between its **languages** (**Administration → Languages**): the main language plus additional ones.
@@ -98,7 +111,8 @@ Supertext accepts only its own language codes, and the module doesn't guess: whe
 
 1. the code in the connection's **Language mapping**, one line per language: `de_DE = de-CH`, `es_ES = es`, `zh_CN = zh-Hans`; else
 2. the Supertext code it equals apart from upper/lower case and `_`/`-`: `de_CH` → `de-CH`, `fr_FR` → `fr-FR`, `it_IT` → `it-IT`, `en_US` → `en-US`, `nl` → `nl`; else
-3. nothing: the language is **not mapped**, and translating into (or from) it fails with *The language … has no Supertext language yet* without sending anything.
+3. its obvious default as a target (since Supertext SDK 0.4.0): a bare `de`, `en`, `fr`, `it`, `pt` → `de-DE`, `en-US`, `fr-FR`, `it-IT`, `pt-PT`; `zh_CN` → `zh-Hans`, `zh_TW` → `zh-Hant`; a region of a language Supertext offers without one → the bare code (`es_ES` → `es`, `nl_NL` → `nl`, `sl_SI` → `sl`); else
+4. nothing: the language is **not mapped** (e.g. `de_LI`, `en_IE`, `fr_BE`, `sr_RS`), and translating into (or from) it fails with *The language … has no Supertext language yet* without sending anything.
 
 The source language uses the same line without its region (`de_DE = de-CH` sends the source `de`; `en_US` is sent as `en`).
 
@@ -111,7 +125,7 @@ Supertext's target codes (October 2026; the API's list is `GET features`):
 | Swiss German dialects | `gsw-u-sd-chzh` (Zurich), `gsw-u-sd-chbe` (Bern) |
 | Without a region | `bg`, `cs`, `da`, `el`, `es`, `fi`, `hr`, `hu`, `ja`, `ko`, `nb`, `nl`, `pl`, `rm`, `ru`, `sk`, `sl`, `sq`, `sv`, `tr` |
 
-So AtroCore's `es_ES`, `sl_SI`, `nl_NL`, `pl_PL`, `zh_CN` or a bare `de` need a line (`es_ES = es`, `zh_CN = zh-Hans`, `de = de-CH`). A mapped code that isn't in the list is sent as entered, so a language Supertext adds later works right away.
+So AtroCore's `es_ES`, `nl_NL` or `zh_CN` work without a line, and a bare `de` is translated as German for Germany (`de-DE`); add a line where you want something else (`de = de-CH`) and for languages without a default (`fr_BE = fr-FR`). A mapped code that isn't in the list is sent as entered, so a language Supertext adds later works right away.
 
 The connection's read-only field **Languages** shows every AtroCore language with the code it is sent as, *not mapped* for the ones that still need a line, and *(no formal/informal tone)* for targets where Supertext offers no form of address (English, Romansh, Albanian, Swiss German, Serbian): the action's *Formal*/*Informal* is not sent for those, and the result says so (*Supertext offers no formal or informal tone for en_US: translated with the default tone.*).
 
@@ -121,7 +135,7 @@ Multilingual text fields (*varchar*, *text*, *markdown* and *wysiwyg*) of the re
 
 ## Interface languages
 
-The module's labels, tooltips and options (the action type, the action and connection fields) and its messages (action results, errors, *Test connection*) are available in English, German, French and Italian. They follow each user's AtroCore interface language: the language of the *Locale* in the user's profile, or the system's default locale. Other languages show the English texts. The console commands (`supertext check`, `supertext translate`) answer in English; an execution's log keeps the language of the user who ran it.
+The module's labels, tooltips and options (the action type, the action and connection fields) the upload page of *Import translation* and its messages (action results, import summaries, errors, *Test connection*) are available in English, German, French and Italian. They follow each user's AtroCore interface language: the language of the *Locale* in the user's profile, or the system's default locale. Other languages show the English texts. The console commands (`supertext check`, `translate`, `export`, `import`) answer in English; an execution's log keeps the language of the user who ran it.
 
 ## Permissions
 
@@ -129,6 +143,8 @@ The module's labels, tooltips and options (the action type, the action and conne
 | --- | --- |
 | See and run the action | Everyone who may read the entity (**Administration → Roles**: *Read* on the entity; the demo's editor role also has *Read* on *Actions*). |
 | Save the translation | With *Execute as: Same user*: whoever may edit the record (*Edit*; for attribute values also *Create attribute value*). With *Execute as: System*: anyone who may run the action. |
+| Export for translation | Whoever may read the record (the download runs as the signed-in user, whatever *Execute as* says). |
+| Import translation | Whoever may edit each record in the file (*Edit*, as the signed-in user); records the user may not edit are reported and left alone. |
 | Connections and actions | Administrators. |
 
 Use **Conditions** on the action, or roles, to show the button only to the right people.
@@ -157,6 +173,7 @@ Action (**Administration → Actions**, type *Translate with Supertext*):
 | Target languages | every other language | The languages to translate into. |
 | Overwrite existing translations | off | Off: fields that already have text in a target language are kept. On: they are replaced. |
 | Form of address | Default | *Formal* or *Informal*, for languages that have both (German *Sie*/*du*, French *vous*/*tu*, …). Not sent for targets where Supertext doesn't offer it (see the connection's **Languages**). |
+| File format | XLIFF 1.2 | Only *Export for translation*: *XLIFF 1.2 (for translation tools)*, one file for all target languages, or *HTML (one language per file)*. The connection, languages and *Overwrite existing translations* apply to this type too. |
 
 AtroCore's own action settings apply as usual: *Execute as*, *Execute in background*, *Mass action*, *Display*, *Conditions*.
 
@@ -190,14 +207,19 @@ php console.php "supertext check"                                  # version, la
 php console.php "supertext translate Product <id>"                 # into all other languages
 php console.php "supertext translate Product <id> de_CH,fr_CH --overwrite --politeness=more"
 php console.php "supertext translate Category <id> all --source=de_CH"
+php console.php "supertext export Product <id> de_CH,fr_CH --format=xliff --output=/tmp/product.xlf"   # Export for translation
+php console.php "supertext export Product <id> de_CH --format=html --overwrite --output=/tmp/product-de.html"
+php console.php "supertext import /tmp/product.xlf --include-changed"                             # Import translation (add --overwrite to replace existing texts)
 ```
 
-The commands use the first Supertext connection (or `SUPERTEXT_API_KEY`) and run as AtroCore's system user. Without `--overwrite`, fields that already have text are kept. `supertext check` runs the API key check and, unless version reports are off, sends a `check` report to Supertext.
+The commands use the first Supertext connection (or `SUPERTEXT_API_KEY`) and run as AtroCore's system user. File paths can't contain spaces. Without `--overwrite`, fields that already have text are kept. `supertext check` runs the API key check and, unless version reports are off, sends a `check` report to Supertext.
 
 ## Troubleshooting
 
 | Problem | What to do |
 | --- | --- |
+| *Export for translation* or *Import translation* shows its message but nothing opens | The browser blocked the new tab: allow pop-ups for AtroPIM. |
+| "The file is too large (at most 10 MB)." for a smaller file | PHP's `upload_max_filesize` / `post_max_size` are lower than the file: raise them (see [Export for translation and Import translation](#export-for-translation-and-import-translation)). |
 | The type *Supertext* is missing under Connections, or *Translate with Supertext* under Actions | The module isn't registered: check **Administration → Updates & Modules**, run `php atrocore-installer.phar update` and reload the browser. |
 | "No Supertext API key is configured" | Enter the key in the Supertext connection, or set `SUPERTEXT_API_KEY`. No Supertext account yet? Create one at <https://www.supertext.com/person/en/account/signin>. Generate your API key at <https://www.supertext.com/en/integrations/api> (requires the Admin role). |
 | "Authentication failed. Please check the Supertext API key." | The key is wrong or revoked. Generate a new one at supertext.com → Integrations → API (<https://www.supertext.com/en/integrations/api>, Admin role) and paste it again; **Test connection** confirms it. |
