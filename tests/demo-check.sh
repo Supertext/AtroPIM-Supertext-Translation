@@ -67,11 +67,11 @@ patch() { curl -s -o /dev/null -w '%{http_code}' -H "$admin" -H 'Content-Type: a
 test "$(field supertextCodeDeCh)" = de-CH
 test "$(field supertextCodeEnUs)" = en-US
 grep -qF '"fr-FR"' <<< "$(curl -sf -H "$admin" http://127.0.0.1:$PORT/api/metadata | python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin)["entityDefs"]["Connection"]["fields"]["supertextCodeFrCh"]["options"]))')"
-labels=$(curl -sf "http://127.0.0.1:$PORT/api/i18n?locale=de_DE" | python3 -c 'import json,sys; c=json.load(sys.stdin)["Connection"]; print(c["fields"]["supertextCodeFrCh"]); print(c["options"]["supertextCodeFrCh"]["fr-CH"]); print(c["options"]["supertextCodeFrCh"][""])')
+labels=$(curl -sf "http://127.0.0.1:$PORT/api/i18n" | python3 -c 'import json,sys; c=json.load(sys.stdin)["Connection"]; print(c["fields"]["supertextCodeFrCh"]); print(c["options"]["supertextCodeFrCh"]["fr-CH"]); print(c["options"]["supertextCodeFrCh"][""])')
 echo "$labels"
-grep -qF 'Supertext-Sprache für' <<< "$labels"
+grep -qF 'Supertext language for' <<< "$labels"
 grep -qF '(fr-CH)' <<< "$labels"
-grep -qF -- '— bitte wählen —' <<< "$labels"
+grep -qF -- '— choose —' <<< "$labels"
 test "$(patch '{"supertextCodeFrCh":"xx-YY"}')" = 400
 test "$(patch '{"supertextCodeFrCh":"fr-FR"}')" = 200
 grep -qF 'fr_CH → fr-FR' <<< "$(console supertext check)"
