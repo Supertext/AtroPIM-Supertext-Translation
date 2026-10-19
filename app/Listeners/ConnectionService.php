@@ -14,6 +14,7 @@ use Atro\Core\EventManager\Event;
 use Atro\Core\Exceptions\BadRequest;
 use Atro\Listeners\AbstractListener;
 use Espo\ORM\Entity;
+use SupertextTranslation\Api\SupertextClient;
 use SupertextTranslation\Translation\ConnectionResolver;
 use SupertextTranslation\Translation\ConnectionStatus;
 use SupertextTranslation\Translation\LanguageMapping;
@@ -135,7 +136,7 @@ class ConnectionService extends AbstractListener
 
     /**
      * Each combo box without a value shows its suggestion (not saved: a language without a value is
-     * translated with the same code anyway).
+     * translated with the same code anyway), and a review service URL never saved shows the default.
      *
      * @param list<string> $languages
      */
@@ -149,6 +150,11 @@ class ConnectionService extends AbstractListener
             if ((string) ($data[$field] ?? '') === '' && method_exists($entity, 'setDataField')) {
                 $entity->setDataField($field, LanguageMapping::suggestion($language));
             }
+        }
+
+        // Not saved yet: Supertext's review service (as Settings uses it).
+        if (($data[LanguageMapping::REVIEW_URL_FIELD] ?? null) === null && method_exists($entity, 'setDataField')) {
+            $entity->setDataField(LanguageMapping::REVIEW_URL_FIELD, SupertextClient::REVIEW_URL);
         }
     }
 

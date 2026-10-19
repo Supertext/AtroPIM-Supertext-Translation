@@ -116,6 +116,7 @@
     "supertextFileSubmit": "Übersetzung importieren",
     "supertextFileHelp": "Laden Sie eine Datei hoch, die mit «Für Übersetzung exportieren» exportiert und inzwischen übersetzt wurde. Die Texte werden in der Zielsprache des Datensatzes gespeichert, wie bei einer Übersetzung mit Supertext.",
     "supertextFileResult": "Ergebnis",
-    "supertextInvalidLanguageCode": "«{code}» ist keine Supertext-Sprache. Wählen Sie eine aus der Liste."
+    "supertextInvalidLanguageCode": "«{code}» ist keine Supertext-Sprache. Wählen Sie eine aus der Liste.",
+    "supertextLanguageReview": "· Übersetzungsprüfung"
   }
 }

@@ -27,6 +27,8 @@ use SupertextTranslation\Sdk\V1\Languages;
 final class LanguageMapping
 {
     public const FIELD_PREFIX = 'supertextCode';
+    public const REVIEW_PREFIX = 'supertextReview';
+    public const REVIEW_URL_FIELD = 'supertextReviewUrl';
     public const LEGACY_FIELD = 'supertextLanguageCodes';
 
     /** "de_DE" → "supertextCodeDeDe" (AtroCore's camel case, as for multilingual fields: nameDeDe). */
@@ -35,6 +37,12 @@ final class LanguageMapping
         $parts = array_filter(explode('_', strtolower($language)), static fn (string $part): bool => $part !== '');
 
         return self::FIELD_PREFIX . implode('', array_map('ucfirst', $parts));
+    }
+
+    /** "de_DE" → "supertextReviewDeDe": the language's *Translation review* checkbox. */
+    public static function reviewField(string $language): string
+    {
+        return self::REVIEW_PREFIX . substr(self::field($language), \strlen(self::FIELD_PREFIX));
     }
 
     /** The preselection of a language's combo box: Supertext's code for it (exact match or SDK default), else "". */
@@ -69,23 +77,37 @@ final class LanguageMapping
                 'default'               => self::suggestion($language),
                 'prohibitedEmptyValue'  => false,
                 'tooltip'               => true,
-                'conditionalProperties' => ['visible' => ['conditionGroup' => [['type' => 'equals', 'attribute' => 'type', 'value' => 'supertext']]]],
+                'conditionalProperties' => self::visibleForSupertext(),
+            ];
+            $defs[self::reviewField($language)] = [
+                'type'                  => 'bool',
+                'notStorable'           => true,
+                'dataField'             => true,
+                'default'               => false,
+                'tooltip'               => true,
+                'conditionalProperties' => self::visibleForSupertext(),
             ];
         }
 
         return $defs;
     }
 
+    /** @return array<string, mixed> */
+    private static function visibleForSupertext(): array
+    {
+        return ['visible' => ['conditionGroup' => [['type' => 'equals', 'attribute' => 'type', 'value' => 'supertext']]]];
+    }
+
     /**
-     * The form rows of the mapping: one per language.
+     * The form rows of the mapping: one per language, its combo box and its *Translation review*.
      *
      * @param list<string> $languages
      *
-     * @return list<list<array{name: string}|false>>
+     * @return list<list<array{name: string}>>
      */
     public static function rows(array $languages): array
     {
-        return array_map(static fn (string $language): array => [['name' => self::field($language)], false], $languages);
+        return array_map(static fn (string $language): array => [['name' => self::field($language)], ['name' => self::reviewField($language)]], $languages);
     }
 
     /**
@@ -128,6 +150,19 @@ final class LanguageMapping
         }
 
         return $mapping;
+    }
+
+    /**
+     * The languages whose *Translation review* is ticked.
+     *
+     * @param array<string, mixed> $data
+     * @param list<string>         $languages
+     *
+     * @return list<string>
+     */
+    public static function reviewLanguages(array $data, array $languages): array
+    {
+        return array_values(array_filter($languages, static fn (string $language): bool => \in_array($data[self::reviewField($language)] ?? false, [true, 1, '1', 'true'], true)));
     }
 
     /**
@@ -187,10 +222,12 @@ final class LanguageMapping
      * @param string                $choose        the label of the empty option
      * @param string                $tooltip       the tooltip of every combo box
      * @param string                $locale        the interface language (en_US, de_DE, …) for the option names
+     * @param string                $reviewText    the label of the *Translation review* checkboxes
+     * @param string                $reviewTooltip their tooltip
      *
      * @return array{fields: array<string, string>, tooltips: array<string, string>, options: array<string, array<string, string>>}
      */
-    public static function labels(array $languages, array $languageNames, string $fieldText, string $choose, string $tooltip, string $locale): array
+    public static function labels(array $languages, array $languageNames, string $fieldText, string $choose, string $tooltip, string $locale, string $reviewText = 'Translation review', string $reviewTooltip = ''): array
     {
         $optionNames = ['' => $choose];
 
@@ -207,6 +244,9 @@ final class LanguageMapping
             $result['fields'][$field]   = strtr($fieldText, ['{language}' => $name !== '' && $name !== $language ? "$name ($language)" : $language]);
             $result['tooltips'][$field] = $tooltip;
             $result['options'][$field]  = $optionNames;
+
+            $result['fields'][self::reviewField($language)]   = $reviewText;
+            $result['tooltips'][self::reviewField($language)] = $reviewTooltip;
         }
 
         return $result;

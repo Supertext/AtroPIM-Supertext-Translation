@@ -17,7 +17,8 @@ use SupertextTranslation\Translation\LanguageMapping;
 
 /**
  * Adds the Supertext fields to the Connection form; they are only visible for type "Supertext".
- * The language mapping is one row per AtroCore language (see LanguageMapping).
+ * The language mapping is one row per AtroCore language: its Supertext language and its
+ * *Translation review* (see LanguageMapping).
  */
 class ConnectionLayout extends AbstractLayoutListener
 {
@@ -27,6 +28,7 @@ class ConnectionLayout extends AbstractLayoutListener
     ];
 
     public const ROWS_AFTER_LANGUAGES = [
+        [['name' => 'supertextReviewUrl'], false],
         [['name' => 'supertextVersionReports'], false],
         [['name' => 'supertextKeyCheck', 'fullWidth' => true]],
         [['name' => 'supertextLanguageStatus', 'fullWidth' => true]],

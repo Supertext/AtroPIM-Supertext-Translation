@@ -32,9 +32,11 @@ final class Settings
     private array $languageCodes;
 
     /**
-     * @param string                $languageCodes  the old text mapping ("de_DE = de-CH" per line), see LanguageMapping
-     * @param bool|null             $versionReports the connection's "Send version information to Supertext"; null: not set (on)
-     * @param array<string, string> $chosenCodes    the connection's combo boxes (AtroCore language => Supertext code); they win
+     * @param string                $languageCodes   the old text mapping ("de_DE = de-CH" per line), see LanguageMapping
+     * @param bool|null             $versionReports  the connection's "Send version information to Supertext"; null: not set (on)
+     * @param array<string, string> $chosenCodes     the connection's combo boxes (AtroCore language => Supertext code); they win
+     * @param list<string>          $reviewLanguages the AtroCore languages with *Translation review* on
+     * @param string|null           $reviewUrl       the connection's review service URL; null: not set (Supertext's review service), '' = off
      */
     public function __construct(
         private readonly string $apiKey,
@@ -44,6 +46,8 @@ final class Settings
         string $languageCodes = '',
         private readonly ?bool $versionReports = null,
         array $chosenCodes = [],
+        private readonly array $reviewLanguages = [],
+        private readonly ?string $reviewUrl = null,
     ) {
         $this->languageCodes = array_merge(self::parseLanguageCodes($languageCodes), $chosenCodes);
     }
@@ -62,7 +66,36 @@ final class Settings
             (string) ($data[LanguageMapping::LEGACY_FIELD] ?? ''),
             isset($data['supertextVersionReports']) ? (bool) $data['supertextVersionReports'] : null,
             LanguageMapping::fromData($data, $languages),
+            LanguageMapping::reviewLanguages($data, $languages),
+            isset($data[LanguageMapping::REVIEW_URL_FIELD]) && \is_string($data[LanguageMapping::REVIEW_URL_FIELD]) ? $data[LanguageMapping::REVIEW_URL_FIELD] : null,
         );
+    }
+
+    /** Whether translations into this AtroCore language go through the review service (its *Translation review*, and a review URL). */
+    public function review(string $language): bool
+    {
+        return \in_array($language, $this->reviewLanguages, true) && $this->reviewUrl() !== '';
+    }
+
+    /** @return list<string> the AtroCore languages with *Translation review* ticked */
+    public function reviewLanguages(): array
+    {
+        return $this->reviewLanguages;
+    }
+
+    /**
+     * The review service: SUPERTEXT_REVIEW_URL if set, else the connection's *Review service URL*
+     * (not saved yet: Supertext's review service; '' = review off for every language).
+     */
+    public function reviewUrl(): string
+    {
+        $override = self::env('SUPERTEXT_REVIEW_URL');
+
+        if ($override !== '') {
+            return $override;
+        }
+
+        return $this->reviewUrl === null ? SupertextClient::REVIEW_URL : trim($this->reviewUrl);
     }
 
     /** The "Send version information to Supertext" setting; null when it was never saved (on). */
@@ -175,6 +208,10 @@ final class Settings
                 } elseif (!Languages::isSupportedTarget($target)) {
                     $line .= ' ' . $messages->text('language_unlisted');
                 }
+
+                if ($this->review($language)) {
+                    $line .= ' ' . $messages->text('language_review');
+                }
             }
 
             if ($language === $mainLanguage) {
@@ -191,9 +228,14 @@ final class Settings
         return implode("\n", $lines);
     }
 
-    public function client(): SupertextClient
+    /**
+     * The client for Supertext; its forReview() is the review service's (same key and settings).
+     *
+     * @param string $pluginVersion the module's version for the User-Agent
+     */
+    public function client(string $pluginVersion = ''): SupertextClient
     {
-        return new SupertextClient($this->apiKey(), $this->baseUrl(), new CurlTransport(), $this->timeout());
+        return new SupertextClient($this->apiKey(), $this->baseUrl(), new CurlTransport(), $this->timeout(), reviewUrl: $this->reviewUrl(), pluginVersion: $pluginVersion);
     }
 
     /**

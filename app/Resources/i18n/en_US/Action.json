@@ -116,6 +116,7 @@
     "supertextFileSubmit": "Import translation",
     "supertextFileHelp": "Upload a file exported with Export for translation and translated since. The texts are saved in the record's target language, like a translation with Supertext.",
     "supertextFileResult": "Result",
-    "supertextInvalidLanguageCode": "\"{code}\" is not a Supertext language. Choose one from the list."
+    "supertextInvalidLanguageCode": "\"{code}\" is not a Supertext language. Choose one from the list.",
+    "supertextLanguageReview": "· translation review"
   }
 }

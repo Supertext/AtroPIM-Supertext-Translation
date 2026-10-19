@@ -21,7 +21,9 @@ class LanguageMappingTest extends TestCase
     {
         $defs = LanguageMapping::fieldDefs(self::LANGUAGES);
 
-        self::assertSame(['supertextCodeEnUs', 'supertextCodeDeDe', 'supertextCodeEsEs', 'supertextCodeFrBe', 'supertextCodeDeCh'], array_keys($defs));
+        self::assertSame(['supertextCodeEnUs', 'supertextCodeDeDe', 'supertextCodeEsEs', 'supertextCodeFrBe', 'supertextCodeDeCh'], array_values(array_filter(array_keys($defs), static fn (string $f): bool => str_starts_with($f, 'supertextCode'))));
+        self::assertSame(['type' => 'bool', 'default' => false], array_intersect_key($defs['supertextReviewDeDe'], ['type' => 1, 'default' => 1]), 'Translation review: off by default');
+        self::assertTrue($defs['supertextReviewDeDe']['dataField']);
         self::assertSame('enum', $defs['supertextCodeDeDe']['type']);
         self::assertTrue($defs['supertextCodeDeDe']['dataField']);
         self::assertTrue($defs['supertextCodeDeDe']['notStorable']);
@@ -55,6 +57,15 @@ class LanguageMappingTest extends TestCase
         self::assertSame('es', $settings->languageCode('es_ES'), 'empty: the default');
         self::assertSame('en-US', $settings->languageCode('en_US'), 'an unknown value is ignored');
         self::assertSame('de', $settings->sourceCode('de_DE'));
+    }
+
+    public function testReviewLanguages(): void
+    {
+        $data = ['supertextReviewDeDe' => true, 'supertextReviewEsEs' => false, 'supertextReviewFrBe' => '1', 'supertextReviewXxYy' => true];
+
+        self::assertSame('supertextReviewZhHantTw', LanguageMapping::reviewField('zh_Hant_TW'));
+        self::assertSame(['de_DE', 'fr_BE'], LanguageMapping::reviewLanguages($data, self::LANGUAGES));
+        self::assertNull(LanguageMapping::invalidValue($data), 'checkboxes are no combo boxes');
     }
 
     public function testOnlySupertextCodesCanBeSaved(): void
@@ -102,6 +113,7 @@ class LanguageMappingTest extends TestCase
         self::assertSame('Supertext language for Deutsch (de_DE)', $labels['fields']['supertextCodeDeDe']);
         self::assertSame('Supertext language for fr_BE', $labels['fields']['supertextCodeFrBe']);
         self::assertSame('Tip', $labels['tooltips']['supertextCodeFrBe']);
+        self::assertSame('Translation review', $labels['fields']['supertextReviewFrBe']);
         self::assertSame('— choose —', $labels['options']['supertextCodeDeDe']['']);
         self::assertSame('German (Switzerland) (de-CH)', $labels['options']['supertextCodeDeDe']['de-CH']);
         self::assertSame('Swiss German (Zurich) (gsw-u-sd-chzh)', $labels['options']['supertextCodeDeDe']['gsw-u-sd-chzh']);
@@ -124,6 +136,6 @@ class LanguageMappingTest extends TestCase
             }
         }
 
-        self::assertSame(['supertextCodeEnUs', 'supertextCodeDeCh'], $names);
+        self::assertSame(['supertextCodeEnUs', 'supertextReviewEnUs', 'supertextCodeDeCh', 'supertextReviewDeCh'], $names, 'the review checkbox next to the combo box');
     }
 }

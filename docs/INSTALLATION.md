@@ -8,7 +8,7 @@ For administrators. The module adds **Translate with Supertext** to AtroPIM (and
 - At least two languages under **Administration → Languages**, and multilingual fields (see [Languages](#languages)).
 - AtroCore's cron job (`php console.php cron` every minute, part of every AtroCore installation) for translations that run in the background.
 - A Supertext account with an AI API key. No Supertext account yet? Create one at supertext.com: <https://www.supertext.com/person/en/account/signin>. Generate your API key at supertext.com → Integrations → API: <https://www.supertext.com/en/integrations/api> (requires the Admin role).
-- The server must reach `https://api.supertext.com` over HTTPS (and, unless you turn version reports off, the Supertext Commando Center: see [Version information and the API key check](#version-information-and-the-api-key-check)).
+- The server must reach `https://api.supertext.com` over HTTPS (and, for [Translation review](#translation-review), Supertext's review service; and, unless you turn version reports off, the Supertext Commando Center: see [Version information and the API key check](#version-information-and-the-api-key-check)).
 
 ## Install
 
@@ -60,7 +60,7 @@ The key is stored in a **connection** of type *Supertext*, encrypted like every 
 2. Enter a name (e.g. *Supertext*), choose the type **Supertext** and paste the key into **API key**. You can paste it with or without the `Supertext-Auth-Key` prefix Supertext shows it with.
 3. Save. Saving checks the key with Supertext (free of charge); the read-only field **API key check** shows the result and when it ran. **Test connection** runs the same check again.
 
-![A connection of type Supertext with the API key, the environment, the timeout and the language mapping](images/connection-settings.png)
+![A connection of type Supertext with the API key, the environment, the timeout, the language mapping with a Translation review checkbox per language, and the review service URL](images/connection-settings.png)
 
 The check's messages: *API key checked: the connection to Supertext works.*; *Supertext rejected the API key …* and *No API key is set yet …* (both with the links to create an account and generate a key); *… because Supertext can't be reached* or *Supertext answered with an error (HTTP …)*: the settings are saved, check again later. An invalid key never blocks saving.
 
@@ -164,6 +164,8 @@ Connection (**Administration → Connections**, type *Supertext*):
 | API URL | none | Only for *Custom URL*. |
 | Timeout (seconds) | 180 | How long to wait for one language (30 to 1800). |
 | Supertext language for … | Supertext's code for the language, else *— choose —* | One combo box per AtroCore language with Supertext's target languages (see [Supertext language codes](#supertext-language-codes-and-the-language-mapping)). Stored as `supertextCode<Language>` (`supertextCodeDeDe`). Replaces the text field *Language mapping* (`supertextLanguageCodes`), whose lines are moved into the combo boxes. |
+| Translation review | off | One checkbox per AtroCore language, next to its combo box: translations **into** that language go through Supertext's review service (see [Translation review](#translation-review)). Stored as `supertextReview<Language>` (`supertextReviewDeDe`). |
+| Review service URL | Supertext's review service | Address of the review service for the languages with *Translation review* ticked. Empty turns review off for every language. Only change it when Supertext gives you another address. The environment variable `SUPERTEXT_REVIEW_URL` overrides it. Stored as `supertextReviewUrl`. |
 | Send version information to Supertext | on | Sends the site URL and the versions of this module, the PIM and the runtime to Supertext when you save these settings and after an update, so Supertext support can see which version you run. No content, no API key and no personal data are sent. The environment variable `SUPERTEXT_VERSION_REPORTS=0` turns it off for the whole installation (see [below](#version-information-and-the-api-key-check)). |
 | API key check | (read-only) | The latest automatic check of the key, with its time, and whether version information is sent (with the ping URL). |
 | Languages | (read-only) | Each AtroCore language with its Supertext code, or *no Supertext language*. |
@@ -188,7 +190,8 @@ Environment variables (on the server; for Apache and PHP-FPM wherever your setup
 | Variable | |
 | --- | --- |
 | `SUPERTEXT_API_KEY` | The key, when the connection has none. |
-| `SUPERTEXT_API_URL` | Overrides the API URL (tests against a stand-in API). |
+| `SUPERTEXT_API_URL` | Overrides the API URL (tests against a stand-in API). To try the review service, tick *Translation review* for a language instead. |
+| `SUPERTEXT_REVIEW_URL` | Optional: another review service than Supertext's (overrides the connection's *Review service URL*; empty keeps the connection's). |
 | `SUPERTEXT_VERSION_REPORTS` | `0` (or `false`, `off`, `no`) turns version reports off for the whole installation, whatever the connection says; `1` turns them on. |
 | `SUPERTEXT_REPORT_URL` | Only for tests: where reports go instead of the Supertext Commando Center. |
 
@@ -203,6 +206,20 @@ Turn it off by unticking the setting on the Supertext connection, or for the who
 **The ping endpoint** `GET <Site URL>/api/supertext/ping?challenge=…` is public (no login, no session) and answers only `{"ok":true,"plugin":"AtroPIM-Supertext-Translation","challenge":"…"}` with `Cache-Control: no-store`, so Supertext can see that the site is reachable from the internet. It returns nothing else: no versions, no settings, no data. A firewall or proxy in front of AtroPIM must let it through for the check to succeed; nothing else depends on it.
 
 The module keeps its reporter state (what was reported last, the latest key check with the key's fingerprint) in AtroCore's configuration file (`data/config.php`, key `supertextReporter`); it is never sent to the browser.
+
+## Translation review
+
+With **Translation review**, people check the translations on your website itself and correct them there: customers or Supertext linguists open the original and the translated page side by side in Chrome with the *Supertext Localization Review* extension and fix texts in a side panel. Their corrections come back into AtroPIM.
+
+Turn it on per language that is translated **into**: **Administration → Connections →** your Supertext connection → **Edit** → tick **Translation review** next to *Supertext language for …* of that language (e.g. *German (de_CH)*) → save. Untick it to turn it off again; nothing else changes. The connection's **Languages** field and `supertext check` mark those languages with *· translation review*.
+
+- Translations into that language then go through Supertext's review service instead of directly to Supertext. It answers exactly like Supertext and passes everything on with your API key, so billing, languages, formal/informal and error messages stay the same. Other languages keep going directly to Supertext.
+- The review service keeps every translation of your account. A text it has translated before gets the same translation again (without a new Supertext call), and once a reviewer has corrected it, the corrected text.
+- **Corrections arrive with the next translation:** after a review, translate the records again (*Translate with Supertext*, with *Overwrite existing translations*) to write the corrections into AtroPIM. As always, overwriting replaces manual changes in the translated fields.
+- Reviewers get a review link for your site from Supertext; nothing to set up in AtroPIM.
+- The review service works with keys of the **live** Supertext API. With the environment *Staging*, *Testing* or a custom URL, leave review off.
+- *Export for translation* and *Import translation* don't use the review service. The automatic API key check and the version reports still go directly to Supertext.
+- The connection's **Review service URL** is Supertext's review service; empty turns review off for every language.
 
 ## Console commands
 
@@ -229,6 +246,8 @@ The commands use the first Supertext connection (or `SUPERTEXT_API_KEY`) and run
 | "Authentication failed. Please check the Supertext API key." | The key is wrong or revoked. Generate a new one at supertext.com → Integrations → API (<https://www.supertext.com/en/integrations/api>, Admin role) and paste it again; **Test connection** confirms it. |
 | "… has no multilingual text fields" | Make the fields multilingual and add a second language (see [Languages](#languages)). |
 | "The language fr_BE has no Supertext language yet …" | The language has no obvious Supertext code: choose one in the connection's combo box **Supertext language for … (fr_BE)** (codes in [Supertext language codes](#supertext-language-codes-and-the-language-mapping)). The connection's **Languages** field lists every language that still needs one. Nothing was sent to Supertext. |
+| "Authentication failed" only for languages with *Translation review* | The review service only works with keys of the live Supertext API: with the environment *Staging*/*Testing* (or a custom URL) leave review off. |
+| Reviewers' corrections don't show up in AtroPIM | They arrive with the next translation: translate the records into that language again with *Overwrite existing translations*. Check that the language's *Translation review* is ticked on the connection. |
 | "Supertext does not support this language pair (en → xx-YY)" | A line of the old text mapping has a code Supertext doesn't offer. Choose the language in the connection's combo box instead; the message shows the codes that were sent. |
 | `"xx-YY" is not a Supertext language …` | A save (usually through the REST API) set a combo box to a code that isn't in Supertext's list. Use a code from the table above, or `""`. |
 | "Supertext offers no formal or informal tone for this language" | Supertext answered that the target has no form of address (a mapped code the module doesn't know yet). Set the action's **Form of address** to *Default*. |

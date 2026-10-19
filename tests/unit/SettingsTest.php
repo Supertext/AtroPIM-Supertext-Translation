@@ -14,6 +14,8 @@ class SettingsTest extends TestCase
     {
         putenv('SUPERTEXT_API_KEY');
         putenv('SUPERTEXT_API_URL');
+        putenv('SUPERTEXT_REVIEW_URL');
+        unset($_SERVER['SUPERTEXT_REVIEW_URL'], $_ENV['SUPERTEXT_REVIEW_URL']);
         unset($_SERVER['SUPERTEXT_API_KEY'], $_ENV['SUPERTEXT_API_KEY'], $_SERVER['SUPERTEXT_API_URL'], $_ENV['SUPERTEXT_API_URL']);
     }
 
@@ -116,5 +118,35 @@ class SettingsTest extends TestCase
         self::assertStringContainsString(Settings::API_KEY_URL, Settings::explain(new SupertextException('Authentication failed.', 401)));
         self::assertStringContainsString(Settings::SIGNUP_URL, Settings::explain(new SupertextException('Authentication failed.', 403)));
         self::assertSame('Timed out.', Settings::explain(new SupertextException('Timed out.')));
+    }
+
+    public function testTranslationReview(): void
+    {
+        $languages = ['en_US', 'de_CH', 'fr_CH'];
+        $data      = ['supertextReviewDeCh' => true, 'supertextReviewFrCh' => false];
+
+        $settings = Settings::fromConnectionData($data, 'k', $languages);
+        self::assertSame(SupertextClient::REVIEW_URL, $settings->reviewUrl(), 'default: Supertext\'s review service');
+        self::assertTrue($settings->review('de_CH'));
+        self::assertFalse($settings->review('fr_CH'), 'off by default');
+        self::assertFalse($settings->review('en_US'));
+        self::assertNotSame($settings->client(), $settings->client()->forReview(true));
+
+        $off = Settings::fromConnectionData($data + ['supertextReviewUrl' => ''], 'k', $languages);
+        self::assertSame('', $off->reviewUrl());
+        self::assertFalse($off->review('de_CH'), 'empty review URL: off for every language');
+        $client = $off->client();
+        self::assertSame($client, $client->forReview(true));
+
+        $custom = Settings::fromConnectionData($data + ['supertextReviewUrl' => 'https://review.example/v1/'], 'k', $languages);
+        self::assertSame('https://review.example/v1/', $custom->reviewUrl());
+
+        putenv('SUPERTEXT_REVIEW_URL=http://127.0.0.1:8765/v1/');
+        self::assertSame('http://127.0.0.1:8765/v1/', $off->reviewUrl(), 'the environment wins');
+        self::assertTrue($off->review('de_CH'));
+
+        $status = $settings->languageStatus($languages, 'en_US', new Messages());
+        self::assertStringContainsString("de_CH → de-CH · translation review\n", $status);
+        self::assertStringContainsString("fr_CH → fr-CH\n", $status . "\n");
     }
 }

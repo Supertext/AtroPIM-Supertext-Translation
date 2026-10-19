@@ -18,7 +18,8 @@ use SupertextTranslation\Translation\LanguageMapping;
 /**
  * Labels the language mapping's combo boxes (one field per AtroCore language, added by
  * Listeners\Metadata) in every interface language: "Supertext language for German (de_DE)", the
- * tooltip and the option names. The texts are the Connection.json "labels" of each language.
+ * tooltip and the option names, and the *Translation review* checkbox next to each. The texts are
+ * the Connection.json "labels" of each language.
  */
 class Language extends AbstractListener
 {
@@ -45,6 +46,8 @@ class Language extends AbstractListener
                 self::text($data, (string) $locale, 'supertextLanguageChoose'),
                 self::text($data, (string) $locale, 'supertextLanguageFieldTooltip'),
                 (string) $locale,
+                self::text($data, (string) $locale, 'supertextReviewField'),
+                self::text($data, (string) $locale, 'supertextReviewFieldTooltip'),
             );
 
             foreach (['fields', 'tooltips', 'options'] as $category) {

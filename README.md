@@ -9,6 +9,7 @@ The record's multilingual texts go to Supertext in one request per language and 
 - Fields that already have text in a language are kept unless the action overwrites them
 - The API key lives in an AtroCore **connection** of type *Supertext* (encrypted, *Test connection*), or in `SUPERTEXT_API_KEY`
 - Source and target languages, form of address and the language mapping (a combo box per AtroPIM language with Supertext's languages, preselected with the obvious one) are configurable
+- **Translation review** per language: translations into a language with it ticked go through Supertext's review service, where reviewers correct them on your website; the corrections come back with the next translation
 - Checks the API key automatically and, unless switched off, sends version information (site URL, module, AtroPIM and PHP versions; no content, no key) to Supertext
 - **Export for translation** (XLIFF 1.2 or HTML) and **Import translation** of translated files, for translation tools, translators or Supertext's web app (two more action types)
 - Console commands `supertext translate`, `supertext export`, `supertext import` and `supertext check`; English, German, French and Italian interface

@@ -81,6 +81,12 @@ test "$(field supertextCodeItCh)" = it-IT
 test "$(sql "select json_unquote(json_extract(data, '$.supertextLanguageCodes')) from connection where id = '$connection'")" = 'xx_YY = xx-YY'
 test "$(patch '{"supertextCodeItCh":"it-CH"}')" = 200
 grep -qF 'it_CH → it-CH' <<< "$(console supertext check)"
+# Translation review per language: off by default, ticked next to the combo box, shown by the check.
+[[ "$(field supertextReviewDeCh)" =~ ^(False|None)$ ]]
+test "$(field supertextReviewUrl)" = https://localizationreview-production.up.railway.app/v1/
+test "$(patch '{"supertextReviewDeCh":true}')" = 200
+grep -qF 'de_CH → de-CH · translation review' <<< "$(console supertext check)"
+test "$(patch '{"supertextReviewDeCh":false}')" = 200
 
 # The public ping endpoint (no login): the challenge echoed, nothing else.
 test "$(curl -s "http://127.0.0.1:$PORT/api/supertext/ping?challenge=ci-challenge-0123456789")" = '{"ok":true,"plugin":"AtroPIM-Supertext-Translation","challenge":"ci-challenge-0123456789"}'

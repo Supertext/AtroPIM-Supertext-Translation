@@ -116,6 +116,7 @@
     "supertextFileSubmit": "Importa traduzione",
     "supertextFileHelp": "Carichi un file esportato con «Esporta per la traduzione» e nel frattempo tradotto. I testi vengono salvati nella lingua di destinazione del record, come in una traduzione con Supertext.",
     "supertextFileResult": "Risultato",
-    "supertextInvalidLanguageCode": "«{code}» non è una lingua Supertext. Ne scelga una dall'elenco."
+    "supertextInvalidLanguageCode": "«{code}» non è una lingua Supertext. Ne scelga una dall'elenco.",
+    "supertextLanguageReview": "· revisione delle traduzioni"
   }
 }

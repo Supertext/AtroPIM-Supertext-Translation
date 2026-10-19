@@ -35,6 +35,8 @@ In the product list, select the products, open **Actions** and choose **Translat
 
 The translation is saved right away, like a change you make yourself: it appears in the product's history (*Activities*), and AtroPIM's rules for the fields apply. Read it in each language, correct it with **Edit** where needed, and change the product's status as you usually do. Supertext AI is good, but it doesn't know your product range: check names, measurements and terms that must stay the same.
 
+**Translation review:** if your administrator turned on *Translation review* for a language, reviewers (your colleagues or Supertext linguists) check and correct the translations on your website. Their corrections come into AtroPIM the next time the record is translated into that language with an action that overwrites existing translations: after a review, translate the records again. Texts reviewed once keep their corrected wording in later translations.
+
 ## Translate again
 
 Translating again **keeps** every field that already has text in a language, so your corrections are never lost:
