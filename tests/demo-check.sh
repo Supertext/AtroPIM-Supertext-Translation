@@ -77,8 +77,11 @@ test "$(patch '{"supertextCodeFrCh":"fr-FR"}')" = 200
 grep -qF 'fr_CH → fr-FR' <<< "$(console supertext check)"
 test "$(patch '{"supertextCodeFrCh":"fr-CH"}')" = 200
 sql "update connection set data = json_remove(json_set(data, '$.supertextLanguageCodes', 'it_CH = it-IT\nxx_YY = xx-YY'), '$.supertextCodeItCh') where id = '$connection'"
-test "$(field supertextCodeItCh)" = it-IT
-test "$(sql "select json_unquote(json_extract(data, '$.supertextLanguageCodes')) from connection where id = '$connection'")" = 'xx_YY = xx-YY'
+migrated=$(field supertextCodeItCh)
+kept=$(sql "select json_unquote(json_extract(data, '$.supertextLanguageCodes')) from connection where id = '$connection'")
+echo "Migrated: it_CH → $migrated; kept in the old field: $kept"
+test "$migrated" = it-IT
+test "$kept" = 'xx_YY = xx-YY'
 test "$(patch '{"supertextCodeItCh":"it-CH"}')" = 200
 grep -qF 'it_CH → it-CH' <<< "$(console supertext check)"
 # Translation review per language: off by default, ticked next to the combo box, shown by the check.

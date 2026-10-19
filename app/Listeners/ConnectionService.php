@@ -131,6 +131,16 @@ class ConnectionService extends AbstractListener
         }
 
         $entity->set('data', $new);
+
+        // The form and the REST answer show the fields' own values: set them too.
+        if (method_exists($entity, 'setDataField')) {
+            foreach ([LanguageMapping::LEGACY_FIELD, ...array_map(LanguageMapping::field(...), ConnectionStatus::languages($this->getContainer())[0])] as $field) {
+                if (\array_key_exists($field, $new)) {
+                    $entity->setDataField($field, $new[$field]);
+                }
+            }
+        }
+
         $this->getContainer()->get('entityManager')->saveEntity($entity, ['skipAll' => true]);
     }
 
