@@ -92,7 +92,7 @@ final class LanguageMapping
      * The first submitted combo box value that isn't one of Supertext's codes (server-side check of a
      * save), or null.
      *
-     * @param array<string, mixed> $input the submitted fields
+     * @param array<mixed> $input the submitted fields (a cast stdClass: keys may be numeric)
      */
     public static function invalidValue(array $input): ?string
     {
