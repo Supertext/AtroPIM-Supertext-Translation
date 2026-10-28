@@ -1,6 +1,6 @@
 # Supertext Translation for AtroPIM: public demo (Railway). Build context = repository root:
 #   docker build -f demo/Dockerfile -t supertext-atropim-demo .
-# One container runs Apache with AtroPIM (AtroCore 2.4 + PIM 1.16) and AtroCore's job runner.
+# One container runs Apache with AtroPIM (AtroCore 2.5 + PIM 1.16) and AtroCore's job runner.
 # MySQL 8.4 is a separate service; data/ and upload/ live on a volume at /data (demo/.env.example).
 #
 # Stages are ordered so that a change to the module only repeats the last stage, not the
